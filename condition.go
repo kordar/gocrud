@@ -51,6 +51,10 @@ type condition struct {
 }
 
 func (c condition) Where(db *gorm.DB, parallel map[string]string) *gorm.DB {
+	if c.Value == nil {
+		return db
+	}
+
 	// 过滤空值
 	if c.FilterEmpty && (c.Value == "" || c.Value == 0) {
 		return db
