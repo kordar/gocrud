@@ -46,7 +46,7 @@ func (mgr *ResourceManager) AddResourceService(service ResourceService) {
 
 func (mgr *ResourceManager) SelectOne(apiName string, searchBody SearchBody) (SearchOneVO, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := goi18n.GetSectionValue(searchBody.Lang(), "errors", "resource.does.not.exist")
+		message := goi18n.GetSectionValue(searchBody.Lang(), "resource.errors", "view.not.exist", "ini").(string)
 		return SearchOneVO{}, errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).SearchOne(searchBody), nil
@@ -54,7 +54,7 @@ func (mgr *ResourceManager) SelectOne(apiName string, searchBody SearchBody) (Se
 
 func (mgr *ResourceManager) Select(apiName string, searchBody SearchBody) (SearchVO, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := goi18n.GetSectionValue(searchBody.Lang(), "errors", "resource.does.not.exist")
+		message := goi18n.GetSectionValue(searchBody.Lang(), "resource.errors", "list.not.exist", "ini").(string)
 		return SearchVO{}, errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).Search(searchBody), nil
@@ -62,7 +62,7 @@ func (mgr *ResourceManager) Select(apiName string, searchBody SearchBody) (Searc
 
 func (mgr *ResourceManager) Add(apiName string, formBody FormBody) (interface{}, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := goi18n.GetSectionValue(formBody.Lang(), "errors", "resource.does.not.exist")
+		message := goi18n.GetSectionValue(formBody.Lang(), "resource.errors", "add.not.exist", "ini").(string)
 		return nil, errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).Add(formBody)
@@ -70,7 +70,7 @@ func (mgr *ResourceManager) Add(apiName string, formBody FormBody) (interface{},
 
 func (mgr *ResourceManager) Update(apiName string, formBody FormBody) (interface{}, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := goi18n.GetSectionValue(formBody.Lang(), "errors", "resource.does.not.exist")
+		message := goi18n.GetSectionValue(formBody.Lang(), "resource.errors", "update.not.exist", "ini").(string)
 		return nil, errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).Update(formBody)
@@ -78,7 +78,7 @@ func (mgr *ResourceManager) Update(apiName string, formBody FormBody) (interface
 
 func (mgr *ResourceManager) Delete(apiName string, removeBody RemoveBody) error {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := goi18n.GetSectionValue(removeBody.Lang(), "errors", "resource.does.not.exist")
+		message := goi18n.GetSectionValue(removeBody.Lang(), "resource.errors", "delete.not.exist", "ini").(string)
 		return errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).Delete(removeBody)
@@ -86,7 +86,7 @@ func (mgr *ResourceManager) Delete(apiName string, removeBody RemoveBody) error 
 
 func (mgr *ResourceManager) Edit(apiName string, editorBody EditorBody) error {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := goi18n.GetSectionValue(editorBody.Lang(), "errors", "resource.does.not.exist")
+		message := goi18n.GetSectionValue(editorBody.Lang(), "resource.errors", "edit.not.exist", "ini").(string)
 		return errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).Edit(editorBody)
@@ -94,7 +94,7 @@ func (mgr *ResourceManager) Edit(apiName string, editorBody EditorBody) error {
 
 func (mgr *ResourceManager) Configs(apiName string, lang string) (map[string]interface{}, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := goi18n.GetSectionValue(lang, "errors", "resource.does.not.exist")
+		message := goi18n.GetSectionValue(lang, "resource.errors", "configs.not.exist", "ini").(string)
 		return nil, errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).Configs(lang), nil
