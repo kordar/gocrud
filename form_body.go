@@ -44,6 +44,10 @@ func (form *FormBody) where(db *gorm.DB, parallel map[string]string) *gorm.DB {
 	return db
 }
 
+func (form *FormBody) Query(db *gorm.DB, parallel map[string]string) *gorm.DB {
+	return form.where(db, parallel)
+}
+
 func (form *FormBody) whereSafe(db *gorm.DB, parallel map[string]string) *gorm.DB {
 	for _, condition := range form.Conditions {
 		flag := false
@@ -61,10 +65,6 @@ func (form *FormBody) QuerySafe(db *gorm.DB, parallel map[string]string) (*gorm.
 		return db, errors.New("forbid no condition update")
 	}
 	return db, nil
-}
-
-func (form *FormBody) Query(db *gorm.DB, parallel map[string]string) *gorm.DB {
-	return form.where(db, parallel)
 }
 
 func (form *FormBody) QueryCustom(db *gorm.DB, parallel map[string]string, fun func(form *FormBody, db *gorm.DB, parallel map[string]string) *gorm.DB) *gorm.DB {

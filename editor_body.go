@@ -24,7 +24,17 @@ func NewEditorBody(ctx *gin.Context) EditorBody {
 func (form *EditorBody) where(db *gorm.DB, parallel map[string]string) *gorm.DB {
 	for _, condition := range form.Conditions {
 		db = condition.Where(db, parallel)
-		form.safeCounter++
+	}
+	return db
+}
+
+func (form *EditorBody) whereSafe(db *gorm.DB, parallel map[string]string) *gorm.DB {
+	for _, condition := range form.Conditions {
+		flag := false
+		db, flag = condition.WhereSafe(db, parallel)
+		if flag == true {
+			form.safeCounter++
+		}
 	}
 	return db
 }
@@ -49,7 +59,7 @@ func (form *EditorBody) Updates(db *gorm.DB, parallel map[string]string) error {
 }
 
 func (form *EditorBody) QuerySafe(db *gorm.DB, parallel map[string]string) (*gorm.DB, error) {
-	db = form.where(db, parallel)
+	db = form.whereSafe(db, parallel)
 	if form.safeCounter == 0 {
 		return db, errors.New("forbid no condition edit")
 	}
