@@ -50,6 +50,56 @@ type condition struct {
 	FilterEmpty bool        `json:"filter_empty" form:"filter_empty"`
 }
 
+func (c condition) WhereSafe(db *gorm.DB, parallel map[string]string) (*gorm.DB, bool) {
+	if c.Value == nil {
+		return db, false
+	}
+
+	// 过滤空值
+	if c.FilterEmpty && (c.Value == "" || c.Value == 0) {
+		return db, false
+	}
+
+	/**
+	 * 获取属性
+	 * {"property": "属性", "key": "键值", "field": "字段值"}
+	 * 存在属性值以属性值为准，否则将key值计算驼峰设置为属性值
+	 */
+	property := strings.Trim(c.Property, " ")
+	if property == "" {
+		property = strings.Trim(c.Key, " ")
+	}
+
+	if property == "" {
+		return db, false
+	}
+
+	/**
+	* 通过属性值获取字段类型
+	 */
+	var field string
+	if parallel == nil {
+		field = parallel[property]
+	}
+
+	// 属性值转为下划线
+	if field == "" {
+		field = goutil.SnakeString(property)
+	}
+
+	t := strings.ToUpper(c.Type)
+	if t == "" {
+		t = "EQ"
+	}
+
+	o := conditions[t]
+	if o == nil {
+		o = &EQ{}
+	}
+
+	return o.execute(db, field, c.Value, c.Value2), true
+}
+
 func (c condition) Where(db *gorm.DB, parallel map[string]string) *gorm.DB {
 	if c.Value == nil {
 		return db
@@ -100,7 +150,7 @@ func (c condition) Where(db *gorm.DB, parallel map[string]string) *gorm.DB {
 	return o.execute(db, field, c.Value, c.Value2)
 }
 
-// =
+// EQ =
 type EQ struct {
 }
 
@@ -108,7 +158,7 @@ func (E *EQ) execute(db *gorm.DB, field string, value interface{}, value2 ...int
 	return db.Where(fmt.Sprintf("%s = ?", field), value)
 }
 
-// !=
+// NEQ !=
 type NEQ struct {
 }
 
@@ -116,7 +166,7 @@ func (E *NEQ) execute(db *gorm.DB, field string, value interface{}, value2 ...in
 	return db.Where(fmt.Sprintf("%s <> ?", field), value)
 }
 
-// <
+// LT <
 type LT struct {
 }
 
@@ -124,7 +174,7 @@ func (E *LT) execute(db *gorm.DB, field string, value interface{}, value2 ...int
 	return db.Where(fmt.Sprintf("%s < ?", field), value)
 }
 
-// <=
+// LE <=
 type LE struct {
 }
 
@@ -132,7 +182,7 @@ func (E *LE) execute(db *gorm.DB, field string, value interface{}, value2 ...int
 	return db.Where(fmt.Sprintf("%s <= ?", field), value)
 }
 
-// >
+// GT >
 type GT struct {
 }
 
@@ -140,7 +190,7 @@ func (E *GT) execute(db *gorm.DB, field string, value interface{}, value2 ...int
 	return db.Where(fmt.Sprintf("%s > ?", field), value)
 }
 
-// >=
+// GE >=
 type GE struct {
 }
 
@@ -148,7 +198,7 @@ func (E *GE) execute(db *gorm.DB, field string, value interface{}, value2 ...int
 	return db.Where(fmt.Sprintf("%s >= ?", field), value)
 }
 
-// in
+// IN "in"
 type IN struct {
 }
 
@@ -156,7 +206,7 @@ func (E *IN) execute(db *gorm.DB, field string, value interface{}, value2 ...int
 	return db.Where(fmt.Sprintf("%s IN ?", field), value)
 }
 
-// not in
+// NOTIN not in
 type NOTIN struct {
 }
 
@@ -164,7 +214,7 @@ func (E *NOTIN) execute(db *gorm.DB, field string, value interface{}, value2 ...
 	return db.Where(fmt.Sprintf("%s NOT IN ?", field), value)
 }
 
-// like
+// LIKE "like"
 type LIKE struct {
 }
 
@@ -173,7 +223,7 @@ func (E *LIKE) execute(db *gorm.DB, field string, value interface{}, value2 ...i
 	return db.Where(fmt.Sprintf("%s LIKE ?", field), "%"+s+"%")
 }
 
-// not like
+// NOTLIKE not like
 type NOTLIKE struct {
 }
 
@@ -182,7 +232,7 @@ func (E *NOTLIKE) execute(db *gorm.DB, field string, value interface{}, value2 .
 	return db.Where(fmt.Sprintf("%s NOT LIKE %%?%%", field), "%"+s+"%")
 }
 
-// like left
+// LIKELEFT like left
 type LIKELEFT struct {
 }
 
@@ -191,7 +241,7 @@ func (E *LIKELEFT) execute(db *gorm.DB, field string, value interface{}, value2 
 	return db.Where(fmt.Sprintf("%s NOT LIKE ?%%", field), s+"%")
 }
 
-// like right
+// LIKERIGHT like right
 type LIKERIGHT struct {
 }
 
@@ -200,7 +250,7 @@ func (E *LIKERIGHT) execute(db *gorm.DB, field string, value interface{}, value2
 	return db.Where(fmt.Sprintf("%s NOT LIKE %%?", field), "%"+s)
 }
 
-// between
+// BETWEEN "between"
 type BETWEEN struct {
 }
 
@@ -208,7 +258,7 @@ func (E *BETWEEN) execute(db *gorm.DB, field string, value interface{}, value2 .
 	return db.Where(fmt.Sprintf("%s BETWEEN ? AND ?", field), value, value2[0])
 }
 
-// not between
+// NOTBETWEEN not between
 type NOTBETWEEN struct {
 }
 
@@ -216,7 +266,7 @@ func (E *NOTBETWEEN) execute(db *gorm.DB, field string, value interface{}, value
 	return db.Where(fmt.Sprintf("%s NOT BETWEEN ? AND ?", field), value, value2[0])
 }
 
-// is null
+// ISNULL is null
 type ISNULL struct {
 }
 
@@ -224,7 +274,7 @@ func (E *ISNULL) execute(db *gorm.DB, field string, value interface{}, value2 ..
 	return db.Where(fmt.Sprintf("%s IS NULL", field))
 }
 
-// is not null
+// ISNOTNULL is not null
 type ISNOTNULL struct {
 }
 
