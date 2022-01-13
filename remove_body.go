@@ -45,3 +45,11 @@ func (remove *RemoveBody) Query(db *gorm.DB, parallel map[string]string) *gorm.D
 func (remove *RemoveBody) QueryCustom(db *gorm.DB, parallel map[string]string, fun func(form *RemoveBody, db *gorm.DB, parallel map[string]string) *gorm.DB) *gorm.DB {
 	return fun(remove, db, parallel)
 }
+
+func (remove *RemoveBody) Delete(model interface{}, db *gorm.DB) error {
+	if tx, err := remove.QuerySafe(db, nil); err != nil {
+		return err
+	} else {
+		return tx.Delete(model).Error
+	}
+}
