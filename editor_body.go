@@ -7,7 +7,6 @@ import (
 )
 
 type EditorBody struct {
-	Ctx         *gin.Context
 	Conditions  []*condition `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
 	Editors     []*editor    `json:"editor,omitempty" form:"editor,omitempty"`
 	safeCounter int          // 防止无条件更新
@@ -39,6 +38,7 @@ func (form *EditorBody) whereSafe(db *gorm.DB, parallel map[string]string) *gorm
 	return db
 }
 
+// UpdateData the data for update
 func (form *EditorBody) UpdateData(parallel map[string]string) map[string]interface{} {
 	data := map[string]interface{}{}
 	for _, editor := range form.Editors {
@@ -48,16 +48,18 @@ func (form *EditorBody) UpdateData(parallel map[string]string) map[string]interf
 	return data
 }
 
-func (form *EditorBody) Updates(db *gorm.DB, parallel map[string]string) error {
+// Updates update model object
+func (form *EditorBody) Updates(model interface{}, db *gorm.DB, parallel map[string]string) error {
 	if db, err := form.QuerySafe(db, parallel); err != nil {
 		return err
 	} else {
 		data := form.UpdateData(parallel)
-		db := db.UpdateColumns(data)
+		db := db.Model(model).UpdateColumns(data)
 		return db.Error
 	}
 }
 
+// QuerySafe 防止空条件更新
 func (form *EditorBody) QuerySafe(db *gorm.DB, parallel map[string]string) (*gorm.DB, error) {
 	db = form.whereSafe(db, parallel)
 	if form.safeCounter == 0 {
@@ -66,10 +68,12 @@ func (form *EditorBody) QuerySafe(db *gorm.DB, parallel map[string]string) (*gor
 	return db, nil
 }
 
+// Query 条件查询
 func (form *EditorBody) Query(db *gorm.DB, parallel map[string]string) *gorm.DB {
 	return form.where(db, parallel)
 }
 
+// QueryCustom 自定义条件查询
 func (form *EditorBody) QueryCustom(db *gorm.DB, parallel map[string]string, fun func(form *EditorBody, db *gorm.DB, parallel map[string]string) *gorm.DB) *gorm.DB {
 	return fun(form, db, parallel)
 }

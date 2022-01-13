@@ -70,3 +70,85 @@ func (form *FormBody) QuerySafe(db *gorm.DB, parallel map[string]string) (*gorm.
 func (form *FormBody) QueryCustom(db *gorm.DB, parallel map[string]string, fun func(form *FormBody, db *gorm.DB, parallel map[string]string) *gorm.DB) *gorm.DB {
 	return fun(form, db, parallel)
 }
+
+// Create 创建model
+func (form *FormBody) Create(model interface{}, db *gorm.DB, parallel map[string]string) (interface{}, error) {
+	err := form.GetObject(model)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Create(model).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return model, nil
+}
+
+// CreateWithValid 创建并且校验提交参数
+func (form *FormBody) CreateWithValid(model interface{}, db *gorm.DB, parallel map[string]string, valid func(ctx *gin.Context, model interface{}) error) (interface{}, error) {
+	err := form.GetObject(model)
+	if err != nil {
+		return nil, err
+	}
+
+	err = valid(form.Ctx, model)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Create(model).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return model, nil
+}
+
+// Update 更新
+func (form *FormBody) Update(model interface{}, db *gorm.DB, parallel map[string]string) (interface{}, error) {
+
+	err := form.GetObject(model)
+	if err != nil {
+		return nil, err
+	}
+
+	db, err = form.QuerySafe(db, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Updates(model).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return model, nil
+}
+
+// UpdateWithValid 更新并且校验提交参数
+func (form *FormBody) UpdateWithValid(model interface{}, db *gorm.DB, parallel map[string]string, valid func(ctx *gin.Context, model interface{}) error) (interface{}, error) {
+
+	err := form.GetObject(model)
+	if err != nil {
+		return nil, err
+	}
+
+	err = valid(form.Ctx, model)
+	if err != nil {
+		return nil, err
+	}
+
+	db, err = form.QuerySafe(db, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Updates(model).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return model, nil
+}
