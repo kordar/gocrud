@@ -6,7 +6,6 @@ import (
 )
 
 type SearchBody struct {
-	Ctx        *gin.Context
 	Page       int                    `json:"page" form:"page"`
 	PageSize   int                    `json:"pageSize" form:"pageSize"`
 	Data       map[string]interface{} `json:"data,omitempty" form:"data,omitempty"`             // 数据

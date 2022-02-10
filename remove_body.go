@@ -7,7 +7,6 @@ import (
 )
 
 type RemoveBody struct {
-	Ctx         *gin.Context
 	Data        map[string]interface{} `json:"data,omitempty" form:"data,omitempty"`             // 数据
 	Conditions  []*condition           `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
 	safeCounter int                    // 防止无条件更新
