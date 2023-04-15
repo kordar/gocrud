@@ -6,7 +6,7 @@ import (
 )
 
 import (
-	"github.com/kordar/goutil"
+	"github.com/kordar/goutil/helper"
 	"gorm.io/gorm"
 )
 
@@ -84,7 +84,7 @@ func (c condition) WhereSafe(db *gorm.DB, parallel map[string]string) (*gorm.DB,
 
 	// 属性值转为下划线
 	if field == "" {
-		field = goutil.SnakeString(property)
+		field = helper.SnakeString(property)
 	}
 
 	t := strings.ToUpper(c.Type)
@@ -134,7 +134,7 @@ func (c condition) Where(db *gorm.DB, parallel map[string]string) *gorm.DB {
 
 	// 属性值转为下划线
 	if field == "" {
-		field = goutil.SnakeString(property)
+		field = helper.SnakeString(property)
 	}
 
 	t := strings.ToUpper(c.Type)

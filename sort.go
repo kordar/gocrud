@@ -2,7 +2,7 @@ package gocrud
 
 import (
 	"fmt"
-	"github.com/kordar/goutil"
+	"github.com/kordar/goutil/helper"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -48,7 +48,7 @@ func (c sort) Order(db *gorm.DB, parallel map[string]string) *gorm.DB {
 
 	// 属性值转为下划线
 	if field == "" {
-		field = goutil.SnakeString(property)
+		field = helper.SnakeString(property)
 	}
 
 	t := strings.ToUpper(c.Type)
