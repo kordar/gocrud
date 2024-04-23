@@ -1,7 +1,7 @@
 package gocrud
 
 import (
-	"github.com/kordar/goutil/helper"
+	"github.com/kordar/goutil"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -47,7 +47,7 @@ func (c editor) Param(parallel map[string]string) (string, interface{}) {
 
 	// 属性值转为下划线
 	if field == "" {
-		field = helper.SnakeString(property)
+		field = goutil.SnakeString(property)
 	}
 
 	return field, c.Value
@@ -78,7 +78,7 @@ func (c editor) Update(db *gorm.DB, parallel map[string]string) *gorm.DB {
 
 	// 属性值转为下划线
 	if field == "" {
-		field = helper.SnakeString(property)
+		field = goutil.SnakeString(property)
 	}
 
 	t := strings.ToUpper(c.Type)

@@ -152,3 +152,55 @@ func (form *FormBody) UpdateWithValid(model interface{}, db *gorm.DB, parallel m
 
 	return model, nil
 }
+
+// UpdateMapWithValid 更新并且校验提交参数
+func (form *FormBody) UpdateMapWithValid(model interface{}, db *gorm.DB, parallel map[string]string, valid func(ctx *gin.Context, model interface{}) (error, map[string]interface{})) (interface{}, error) {
+
+	err := form.GetObject(model)
+	if err != nil {
+		return nil, err
+	}
+
+	err, m := valid(form.Ctx, model)
+	if err != nil {
+		return nil, err
+	}
+
+	db, err = form.QuerySafe(db, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Model(model).Updates(m).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return model, nil
+}
+
+// SaveWithValid 更新并且校验提交参数
+func (form *FormBody) SaveWithValid(model interface{}, db *gorm.DB, parallel map[string]string, valid func(ctx *gin.Context, model interface{}) error) (interface{}, error) {
+
+	err := form.GetObject(model)
+	if err != nil {
+		return nil, err
+	}
+
+	err = valid(form.Ctx, model)
+	if err != nil {
+		return nil, err
+	}
+
+	db, err = form.QuerySafe(db, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Save(model).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return model, nil
+}
