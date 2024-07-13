@@ -74,6 +74,10 @@ func (form *EditorBody) Query(db *gorm.DB, parallel map[string]string) *gorm.DB 
 }
 
 // QueryCustom 自定义条件查询
-func (form *EditorBody) QueryCustom(db *gorm.DB, parallel map[string]string, fun func(form *EditorBody, db *gorm.DB, parallel map[string]string) *gorm.DB) *gorm.DB {
+func (form *EditorBody) QueryCustom(
+	db *gorm.DB,
+	parallel map[string]string,
+	fun func(form *EditorBody, db *gorm.DB, parallel map[string]string) *gorm.DB,
+) *gorm.DB {
 	return fun(form, db, parallel)
 }
