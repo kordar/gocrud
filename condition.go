@@ -10,34 +10,44 @@ import (
 	"gorm.io/gorm"
 )
 
-var conditions = map[string]operator{
-	"=":          &EQ{},
-	"EQ":         &EQ{},
-	"!=":         &NEQ{},
-	"<>":         &NEQ{},
-	"LT":         &LT{},
-	"<":          &LT{},
-	"LE":         &LE{},
-	"<=":         &LE{},
-	"GT":         &GT{},
-	">":          &GT{},
-	"GE":         &GE{},
-	">=":         &GE{},
-	"NEQ":        &NEQ{},
-	"IN":         &IN{},
-	"NOTIN":      &NOTIN{},
-	"LIKE":       &LIKE{},
-	"NOTLIKE":    &NOTLIKE{},
-	"LIKELEFT":   &LIKELEFT{},
-	"LIKERIGHT":  &LIKERIGHT{},
-	"BETWEEN":    &BETWEEN{},
-	"NOTBETWEEN": &NOTBETWEEN{},
-	"ISNULL":     &ISNULL{},
-	"ISNOTNULL":  &ISNOTNULL{},
+type Condition[V any] map[string]V
+
+var conditions Condition[any]
+
+type execute func(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB
+
+func InitCondition[T any]() {
+	conditions = Condition[any]{}
 }
 
-type operator interface {
-	execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB
+//var conditions = Condition[any]{
+//"=":  &EQ[T]{},
+//"EQ": &EQ{},
+//"!=":         &NEQ{},
+//"<>":         &NEQ{},
+//"LT":         &LT{},
+//"<":          &LT{},
+//"LE":         &LE{},
+//"<=":         &LE{},
+//"GT":         &GT{},
+//">":          &GT{},
+//"GE":         &GE{},
+//">=":         &GE{},
+//"NEQ":        &NEQ{},
+//"IN":         &IN{},
+//"NOTIN":      &NOTIN{},
+//"LIKE":       &LIKE{},
+//"NOTLIKE":    &NOTLIKE{},
+//"LIKELEFT":   &LIKELEFT{},
+//"LIKERIGHT":  &LIKERIGHT{},
+//"BETWEEN":    &BETWEEN{},
+//"NOTBETWEEN": &NOTBETWEEN{},
+//"ISNULL":     &ISNULL{},
+//"ISNOTNULL":  &ISNOTNULL{},
+//}
+
+type operator[T any] interface {
+	execute(db T, field string, value interface{}, value2 ...interface{}) *gorm.DB
 }
 
 type condition struct {
@@ -151,10 +161,10 @@ func (c condition) Where(db *gorm.DB, parallel map[string]string) *gorm.DB {
 }
 
 // EQ =
-type EQ struct {
+type EQ[T any] struct {
 }
 
-func (E *EQ) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
+func (E *EQ[T]) execute(db T, field string, value interface{}, value2 ...interface{}) *gorm.DB {
 	return db.Where(fmt.Sprintf("%s = ?", field), value)
 }
 
