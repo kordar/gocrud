@@ -96,39 +96,3 @@ func (c condition) Where(db interface{}, parallel map[string]string) interface{}
 	exec := GetExecute(c.Type, parallel["driver"], "EQ")
 	return exec(db, field, c.Value, c.Value2)
 }
-
-//func EQ(db interface{}, field string, value interface{}, value2 ...interface{}) interface{} {
-//	return db.(*gorm.DB).Where(fmt.Sprintf("%s = ?", field), value)
-//}
-
-//func main() {
-//	AddExecute("eq", EQ, "")
-//}
-
-//type NEQCondition[T any] func(db T, field string, value T) T
-
-//type EQ[T gorm.DB] struct {
-//}
-//
-//func (E *EQ[T]) Execute(db T, field string, value any, value2 ...any) T {
-//	return db.Where(fmt.Sprintf("%s = ?", field), value)
-//}
-
-//
-
-//func (E *EQ[T]) execute(db T, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-//	return db.Where(fmt.Sprintf("%s = ?", field), value)
-//}
-
-//func InitCondition() {
-//	conditions = Condition[Execute[any]]{}
-//}
-
-//const (
-
-//)
-
-//type operator[T any] interface {
-//	execute(db T, field string, value interface{}, value2 ...interface{}) *gorm.DB
-//}
-//

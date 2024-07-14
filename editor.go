@@ -75,10 +75,3 @@ func (c editor) Update(db interface{}, parallel map[string]string) interface{} {
 	exec := GetExecute(c.Type, parallel["driver"], "SEVAL")
 	return exec(db, field, c.Value)
 }
-
-//type SETVAL struct {
-//}
-//
-//func (s *SETVAL) execute(db *gorm.DB, field string, value interface{}) *gorm.DB {
-//	return db.Update(field, value)
-//}
