@@ -100,3 +100,11 @@ func (mgr *ResourceManager) Configs(apiName string) (map[string]interface{}, err
 	}
 	return mgr.container.GetResourceService(apiName).Configs(lang()), nil
 }
+
+func (mgr *ResourceManager) Driver(apiName string) string {
+	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
+		message := gocfg.GetSectionValue(lang(), "resource.errors.driver_name_required", "language")
+		return message
+	}
+	return mgr.container.GetResourceService(apiName).Driver()
+}
