@@ -14,6 +14,7 @@ type ResourceService interface {
 	Update(body FormBody) (interface{}, error)
 	Edit(body EditorBody) error
 	Configs(lang string) map[string]interface{}
+	Driver() string
 }
 
 type resourceContainer struct {
@@ -46,7 +47,7 @@ func (mgr *ResourceManager) AddResourceService(service ResourceService) {
 
 func (mgr *ResourceManager) SelectOne(apiName string, searchBody SearchBody) (SearchOneVO, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := gocfg.GetSectionValue(searchBody.Lang(), "resource.errors.view_not_exist", "language")
+		message := gocfg.GetSectionValue(lang(), "resource.errors.view_not_exist", "language")
 		return SearchOneVO{}, errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).SearchOne(searchBody), nil
@@ -54,7 +55,7 @@ func (mgr *ResourceManager) SelectOne(apiName string, searchBody SearchBody) (Se
 
 func (mgr *ResourceManager) Select(apiName string, searchBody SearchBody) (SearchVO, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := gocfg.GetSectionValue(searchBody.Lang(), "resource.errors.list_not_exist", "language")
+		message := gocfg.GetSectionValue(lang(), "resource.errors.list_not_exist", "language")
 		return SearchVO{}, errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).Search(searchBody), nil
@@ -62,7 +63,7 @@ func (mgr *ResourceManager) Select(apiName string, searchBody SearchBody) (Searc
 
 func (mgr *ResourceManager) Add(apiName string, formBody FormBody) (interface{}, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := gocfg.GetSectionValue(formBody.Lang(), "resource.errors.add_not_exist", "language")
+		message := gocfg.GetSectionValue(lang(), "resource.errors.add_not_exist", "language")
 		return nil, errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).Add(formBody)
@@ -70,7 +71,7 @@ func (mgr *ResourceManager) Add(apiName string, formBody FormBody) (interface{},
 
 func (mgr *ResourceManager) Update(apiName string, formBody FormBody) (interface{}, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := gocfg.GetSectionValue(formBody.Lang(), "resource.errors.update_not_exist", "language")
+		message := gocfg.GetSectionValue(lang(), "resource.errors.update_not_exist", "language")
 		return nil, errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).Update(formBody)
@@ -78,7 +79,7 @@ func (mgr *ResourceManager) Update(apiName string, formBody FormBody) (interface
 
 func (mgr *ResourceManager) Delete(apiName string, removeBody RemoveBody) error {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := gocfg.GetSectionValue(removeBody.Lang(), "resource.errors.delete_not_exist", "language")
+		message := gocfg.GetSectionValue(lang(), "resource.errors.delete_not_exist", "language")
 		return errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).Delete(removeBody)
@@ -86,16 +87,16 @@ func (mgr *ResourceManager) Delete(apiName string, removeBody RemoveBody) error 
 
 func (mgr *ResourceManager) Edit(apiName string, editorBody EditorBody) error {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := gocfg.GetSectionValue(editorBody.Lang(), "resource.errors.edit_not_exist", "language")
+		message := gocfg.GetSectionValue(lang(), "resource.errors.edit_not_exist", "language")
 		return errors.New(message)
 	}
 	return mgr.container.GetResourceService(apiName).Edit(editorBody)
 }
 
-func (mgr *ResourceManager) Configs(apiName string, lang string) (map[string]interface{}, error) {
+func (mgr *ResourceManager) Configs(apiName string) (map[string]interface{}, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		message := gocfg.GetSectionValue(lang, "resource.errors.configs_not_exist", "language")
+		message := gocfg.GetSectionValue(lang(), "resource.errors.configs_not_exist", "language")
 		return nil, errors.New(message)
 	}
-	return mgr.container.GetResourceService(apiName).Configs(lang), nil
+	return mgr.container.GetResourceService(apiName).Configs(lang()), nil
 }

@@ -5,6 +5,14 @@ import (
 	"strings"
 )
 
+var lang = func() string {
+	return "en"
+}
+
+func SetLangFunc(f func() string) {
+	lang = f
+}
+
 type Operator = string
 
 const (
