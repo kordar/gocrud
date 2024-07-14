@@ -2,17 +2,8 @@ package gocrud
 
 import (
 	"github.com/kordar/goutil"
-	"gorm.io/gorm"
 	"strings"
 )
-
-var editors = map[string]editorOperator{
-	"SETVAL": &SETVAL{},
-}
-
-type editorOperator interface {
-	execute(db *gorm.DB, field string, value interface{}) *gorm.DB
-}
 
 type editor struct {
 	Property string      `json:"property" form:"property"`
@@ -53,7 +44,7 @@ func (c editor) Param(parallel map[string]string) (string, interface{}) {
 	return field, c.Value
 }
 
-func (c editor) Update(db *gorm.DB, parallel map[string]string) *gorm.DB {
+func (c editor) Update(db interface{}, parallel map[string]string) interface{} {
 	/**
 	 * 获取属性
 	 * {"property": "属性", "key": "键值", "field": "字段值"}
@@ -81,22 +72,13 @@ func (c editor) Update(db *gorm.DB, parallel map[string]string) *gorm.DB {
 		field = goutil.SnakeString(property)
 	}
 
-	t := strings.ToUpper(c.Type)
-	if t == "" {
-		t = "SETVAL"
-	}
-
-	o := editors[t]
-	if o == nil {
-		o = &SETVAL{}
-	}
-
-	return o.execute(db, field, c.Value)
+	exec := GetExecute(c.Type, parallel["driver"], "SEVAL")
+	return exec(db, field, c.Value)
 }
 
-type SETVAL struct {
-}
-
-func (s *SETVAL) execute(db *gorm.DB, field string, value interface{}) *gorm.DB {
-	return db.Update(field, value)
-}
+//type SETVAL struct {
+//}
+//
+//func (s *SETVAL) execute(db *gorm.DB, field string, value interface{}) *gorm.DB {
+//	return db.Update(field, value)
+//}

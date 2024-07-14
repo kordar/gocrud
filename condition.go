@@ -1,54 +1,9 @@
 package gocrud
 
 import (
-	"fmt"
+	"github.com/kordar/goutil"
 	"strings"
 )
-
-import (
-	"github.com/kordar/goutil"
-	"gorm.io/gorm"
-)
-
-type Condition[V any] map[string]V
-
-var conditions Condition[any]
-
-type execute func(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB
-
-func InitCondition[T any]() {
-	conditions = Condition[any]{}
-}
-
-//var conditions = Condition[any]{
-//"=":  &EQ[T]{},
-//"EQ": &EQ{},
-//"!=":         &NEQ{},
-//"<>":         &NEQ{},
-//"LT":         &LT{},
-//"<":          &LT{},
-//"LE":         &LE{},
-//"<=":         &LE{},
-//"GT":         &GT{},
-//">":          &GT{},
-//"GE":         &GE{},
-//">=":         &GE{},
-//"NEQ":        &NEQ{},
-//"IN":         &IN{},
-//"NOTIN":      &NOTIN{},
-//"LIKE":       &LIKE{},
-//"NOTLIKE":    &NOTLIKE{},
-//"LIKELEFT":   &LIKELEFT{},
-//"LIKERIGHT":  &LIKERIGHT{},
-//"BETWEEN":    &BETWEEN{},
-//"NOTBETWEEN": &NOTBETWEEN{},
-//"ISNULL":     &ISNULL{},
-//"ISNOTNULL":  &ISNOTNULL{},
-//}
-
-type operator[T any] interface {
-	execute(db T, field string, value interface{}, value2 ...interface{}) *gorm.DB
-}
 
 type condition struct {
 	Property    string      `json:"property" form:"property"`
@@ -60,7 +15,7 @@ type condition struct {
 	FilterEmpty bool        `json:"filter_empty" form:"filter_empty"`
 }
 
-func (c condition) WhereSafe(db *gorm.DB, parallel map[string]string) (*gorm.DB, bool) {
+func (c condition) WhereSafe(db interface{}, parallel map[string]string) (interface{}, bool) {
 	if c.Value == nil {
 		return db, false
 	}
@@ -97,20 +52,11 @@ func (c condition) WhereSafe(db *gorm.DB, parallel map[string]string) (*gorm.DB,
 		field = goutil.SnakeString(property)
 	}
 
-	t := strings.ToUpper(c.Type)
-	if t == "" {
-		t = "EQ"
-	}
-
-	o := conditions[t]
-	if o == nil {
-		o = &EQ{}
-	}
-
-	return o.execute(db, field, c.Value, c.Value2), true
+	exec := GetExecute(c.Type, parallel["driver"], "EQ")
+	return exec(db, field, c.Value, c.Value2), true
 }
 
-func (c condition) Where(db *gorm.DB, parallel map[string]string) *gorm.DB {
+func (c condition) Where(db interface{}, parallel map[string]string) interface{} {
 	if c.Value == nil {
 		return db
 	}
@@ -147,147 +93,42 @@ func (c condition) Where(db *gorm.DB, parallel map[string]string) *gorm.DB {
 		field = goutil.SnakeString(property)
 	}
 
-	t := strings.ToUpper(c.Type)
-	if t == "" {
-		t = "EQ"
-	}
-
-	o := conditions[t]
-	if o == nil {
-		o = &EQ{}
-	}
-
-	return o.execute(db, field, c.Value, c.Value2)
+	exec := GetExecute(c.Type, parallel["driver"], "EQ")
+	return exec(db, field, c.Value, c.Value2)
 }
 
-// EQ =
-type EQ[T any] struct {
-}
+//func EQ(db interface{}, field string, value interface{}, value2 ...interface{}) interface{} {
+//	return db.(*gorm.DB).Where(fmt.Sprintf("%s = ?", field), value)
+//}
 
-func (E *EQ[T]) execute(db T, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	return db.Where(fmt.Sprintf("%s = ?", field), value)
-}
+//func main() {
+//	AddExecute("eq", EQ, "")
+//}
 
-// NEQ !=
-type NEQ struct {
-}
+//type NEQCondition[T any] func(db T, field string, value T) T
 
-func (E *NEQ) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	return db.Where(fmt.Sprintf("%s <> ?", field), value)
-}
+//type EQ[T gorm.DB] struct {
+//}
+//
+//func (E *EQ[T]) Execute(db T, field string, value any, value2 ...any) T {
+//	return db.Where(fmt.Sprintf("%s = ?", field), value)
+//}
 
-// LT <
-type LT struct {
-}
+//
 
-func (E *LT) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	return db.Where(fmt.Sprintf("%s < ?", field), value)
-}
+//func (E *EQ[T]) execute(db T, field string, value interface{}, value2 ...interface{}) *gorm.DB {
+//	return db.Where(fmt.Sprintf("%s = ?", field), value)
+//}
 
-// LE <=
-type LE struct {
-}
+//func InitCondition() {
+//	conditions = Condition[Execute[any]]{}
+//}
 
-func (E *LE) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	return db.Where(fmt.Sprintf("%s <= ?", field), value)
-}
+//const (
 
-// GT >
-type GT struct {
-}
+//)
 
-func (E *GT) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	return db.Where(fmt.Sprintf("%s > ?", field), value)
-}
-
-// GE >=
-type GE struct {
-}
-
-func (E *GE) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	return db.Where(fmt.Sprintf("%s >= ?", field), value)
-}
-
-// IN "in"
-type IN struct {
-}
-
-func (E *IN) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	return db.Where(fmt.Sprintf("%s IN ?", field), value)
-}
-
-// NOTIN not in
-type NOTIN struct {
-}
-
-func (E *NOTIN) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	return db.Where(fmt.Sprintf("%s NOT IN ?", field), value)
-}
-
-// LIKE "like"
-type LIKE struct {
-}
-
-func (E *LIKE) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	s := value.(string)
-	return db.Where(fmt.Sprintf("%s LIKE ?", field), "%"+s+"%")
-}
-
-// NOTLIKE not like
-type NOTLIKE struct {
-}
-
-func (E *NOTLIKE) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	s := value.(string)
-	return db.Where(fmt.Sprintf("%s NOT LIKE %%?%%", field), "%"+s+"%")
-}
-
-// LIKELEFT like left
-type LIKELEFT struct {
-}
-
-func (E *LIKELEFT) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	s := value.(string)
-	return db.Where(fmt.Sprintf("%s NOT LIKE ?%%", field), s+"%")
-}
-
-// LIKERIGHT like right
-type LIKERIGHT struct {
-}
-
-func (E *LIKERIGHT) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	s := value.(string)
-	return db.Where(fmt.Sprintf("%s NOT LIKE %%?", field), "%"+s)
-}
-
-// BETWEEN "between"
-type BETWEEN struct {
-}
-
-func (E *BETWEEN) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	return db.Where(fmt.Sprintf("%s BETWEEN ? AND ?", field), value, value2[0])
-}
-
-// NOTBETWEEN not between
-type NOTBETWEEN struct {
-}
-
-func (E *NOTBETWEEN) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	return db.Where(fmt.Sprintf("%s NOT BETWEEN ? AND ?", field), value, value2[0])
-}
-
-// ISNULL is null
-type ISNULL struct {
-}
-
-func (E *ISNULL) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	return db.Where(fmt.Sprintf("%s IS NULL", field))
-}
-
-// ISNOTNULL is not null
-type ISNOTNULL struct {
-}
-
-func (E *ISNOTNULL) execute(db *gorm.DB, field string, value interface{}, value2 ...interface{}) *gorm.DB {
-	return db.Where(fmt.Sprintf("%s IS NOT NULL", field))
-}
+//type operator[T any] interface {
+//	execute(db T, field string, value interface{}, value2 ...interface{}) *gorm.DB
+//}
+//

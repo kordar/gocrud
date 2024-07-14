@@ -3,29 +3,30 @@ package gocrud
 import (
 	"encoding/json"
 	"errors"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type commonBody struct {
-	Ctx *gin.Context
+	Driver string
 }
 
-func (common *commonBody) Lang() string {
-	return common.Ctx.DefaultQuery("locale", "en")
+func (common *commonBody) GetDriver(parallel map[string]string) string {
+	if parallel == nil || parallel["driver"] == "" {
+		return common.Driver
+	}
+	return parallel["driver"]
 }
 
 type FormBody struct {
-	Conditions  []*condition `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
-	Object      interface{}  `json:"object,omitempty" form:"object,omitempty"`
-	safeCounter int          // 防止无条件更新
+	Conditions  []condition `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
+	Object      interface{} `json:"object,omitempty" form:"object,omitempty"`
+	safeCounter int         // 防止无条件更新
 	commonBody
 }
 
-func NewFormBody(ctx *gin.Context) FormBody {
+func NewFormBody(driver string) FormBody {
 	return FormBody{
-		commonBody: commonBody{Ctx: ctx},
-		Conditions: make([]*condition, 0),
+		commonBody: commonBody{Driver: driver},
+		Conditions: make([]condition, 0),
 	}
 }
 
@@ -37,21 +38,21 @@ func (form *FormBody) GetObject(target interface{}) error {
 	}
 }
 
-func (form *FormBody) where(db *gorm.DB, parallel map[string]string) *gorm.DB {
-	for _, condition := range form.Conditions {
-		db = condition.Where(db, parallel)
+func (form *FormBody) where(db interface{}, parallel map[string]string) interface{} {
+	for _, exec := range form.Conditions {
+		db = exec.Where(db, parallel)
 	}
 	return db
 }
 
-func (form *FormBody) Query(db *gorm.DB, parallel map[string]string) *gorm.DB {
+func (form *FormBody) Query(db interface{}, parallel map[string]string) interface{} {
 	return form.where(db, parallel)
 }
 
-func (form *FormBody) whereSafe(db *gorm.DB, parallel map[string]string) *gorm.DB {
-	for _, condition := range form.Conditions {
+func (form *FormBody) whereSafe(db interface{}, parallel map[string]string) interface{} {
+	for _, exec := range form.Conditions {
 		flag := false
-		db, flag = condition.WhereSafe(db, parallel)
+		db, flag = exec.WhereSafe(db, parallel)
 		if flag == true {
 			form.safeCounter++
 		}
@@ -59,7 +60,7 @@ func (form *FormBody) whereSafe(db *gorm.DB, parallel map[string]string) *gorm.D
 	return db
 }
 
-func (form *FormBody) QuerySafe(db *gorm.DB, parallel map[string]string) (*gorm.DB, error) {
+func (form *FormBody) QuerySafe(db interface{}, parallel map[string]string) (interface{}, error) {
 	db = form.whereSafe(db, parallel)
 	if form.safeCounter == 0 {
 		return db, errors.New("forbid no condition update")
@@ -67,47 +68,51 @@ func (form *FormBody) QuerySafe(db *gorm.DB, parallel map[string]string) (*gorm.
 	return db, nil
 }
 
-func (form *FormBody) QueryCustom(db *gorm.DB, parallel map[string]string, fun func(form *FormBody, db *gorm.DB, parallel map[string]string) *gorm.DB) *gorm.DB {
+func (form *FormBody) QueryCustom(
+	db interface{},
+	parallel map[string]string,
+	fun func(form *FormBody, db interface{}, parallel map[string]string) interface{},
+) interface{} {
 	return fun(form, db, parallel)
 }
 
 // Create 创建model
-func (form *FormBody) Create(model interface{}, db *gorm.DB, parallel map[string]string) (interface{}, error) {
+func (form *FormBody) Create(model interface{}, db interface{}, parallel map[string]string) (interface{}, error) {
 	err := form.GetObject(model)
 	if err != nil {
 		return nil, err
 	}
 
-	err = db.Create(model).Error
-	if err != nil {
-		return nil, err
+	exec := GetExecute("CREATE", form.GetDriver(parallel), "")
+	if e := exec(db, "", model); e == nil {
+		return model, nil
+	} else {
+		return nil, e.(error)
 	}
-
-	return model, nil
 }
 
 // CreateWithValid 创建并且校验提交参数
-func (form *FormBody) CreateWithValid(model interface{}, db *gorm.DB, parallel map[string]string, valid func(ctx *gin.Context, model interface{}) error) (interface{}, error) {
+func (form *FormBody) CreateWithValid(model interface{}, db interface{}, parallel map[string]string, valid func(model interface{}) error) (interface{}, error) {
 	err := form.GetObject(model)
 	if err != nil {
 		return nil, err
 	}
 
-	err = valid(form.Ctx, model)
+	err = valid(model)
 	if err != nil {
 		return nil, err
 	}
 
-	err = db.Create(model).Error
-	if err != nil {
-		return nil, err
+	exec := GetExecute("CREATE", form.GetDriver(parallel), "")
+	if e := exec(db, "", model); e == nil {
+		return model, nil
+	} else {
+		return nil, e.(error)
 	}
-
-	return model, nil
 }
 
 // Update 更新
-func (form *FormBody) Update(model interface{}, db *gorm.DB, parallel map[string]string) (interface{}, error) {
+func (form *FormBody) Update(model interface{}, db interface{}, parallel map[string]string) (interface{}, error) {
 
 	err := form.GetObject(model)
 	if err != nil {
@@ -119,23 +124,23 @@ func (form *FormBody) Update(model interface{}, db *gorm.DB, parallel map[string
 		return nil, err
 	}
 
-	err = db.Updates(model).Error
-	if err != nil {
-		return nil, err
+	exec := GetExecute("UPDATES", form.GetDriver(parallel), "")
+	if e := exec(db, "", model); e == nil {
+		return model, nil
+	} else {
+		return nil, e.(error)
 	}
-
-	return model, nil
 }
 
 // UpdateWithValid 更新并且校验提交参数
-func (form *FormBody) UpdateWithValid(model interface{}, db *gorm.DB, parallel map[string]string, valid func(ctx *gin.Context, model interface{}) error) (interface{}, error) {
+func (form *FormBody) UpdateWithValid(model interface{}, db interface{}, parallel map[string]string, valid func(model interface{}) error) (interface{}, error) {
 
 	err := form.GetObject(model)
 	if err != nil {
 		return nil, err
 	}
 
-	err = valid(form.Ctx, model)
+	err = valid(model)
 	if err != nil {
 		return nil, err
 	}
@@ -145,23 +150,23 @@ func (form *FormBody) UpdateWithValid(model interface{}, db *gorm.DB, parallel m
 		return nil, err
 	}
 
-	err = db.Updates(model).Error
-	if err != nil {
-		return nil, err
+	exec := GetExecute("UPDATES", form.GetDriver(parallel), "")
+	if e := exec(db, "", model); e == nil {
+		return model, nil
+	} else {
+		return nil, e.(error)
 	}
-
-	return model, nil
 }
 
 // UpdateMapWithValid 更新并且校验提交参数
-func (form *FormBody) UpdateMapWithValid(model interface{}, db *gorm.DB, parallel map[string]string, valid func(ctx *gin.Context, model interface{}) (error, map[string]interface{})) (interface{}, error) {
+func (form *FormBody) UpdateMapWithValid(model interface{}, db interface{}, parallel map[string]string, valid func(model interface{}) (error, map[string]interface{})) (interface{}, error) {
 
 	err := form.GetObject(model)
 	if err != nil {
 		return nil, err
 	}
 
-	err, m := valid(form.Ctx, model)
+	err, m := valid(model)
 	if err != nil {
 		return nil, err
 	}
@@ -171,23 +176,23 @@ func (form *FormBody) UpdateMapWithValid(model interface{}, db *gorm.DB, paralle
 		return nil, err
 	}
 
-	err = db.Model(model).Updates(m).Error
-	if err != nil {
-		return nil, err
+	exec := GetExecute("UPDATES", form.GetDriver(parallel), "")
+	if e := exec(db, "", model, m); e == nil {
+		return model, nil
+	} else {
+		return nil, e.(error)
 	}
-
-	return model, nil
 }
 
 // SaveWithValid 更新并且校验提交参数
-func (form *FormBody) SaveWithValid(model interface{}, db *gorm.DB, parallel map[string]string, valid func(ctx *gin.Context, model interface{}) error) (interface{}, error) {
+func (form *FormBody) SaveWithValid(model interface{}, db interface{}, parallel map[string]string, valid func(model interface{}) error) (interface{}, error) {
 
 	err := form.GetObject(model)
 	if err != nil {
 		return nil, err
 	}
 
-	err = valid(form.Ctx, model)
+	err = valid(model)
 	if err != nil {
 		return nil, err
 	}
@@ -197,10 +202,10 @@ func (form *FormBody) SaveWithValid(model interface{}, db *gorm.DB, parallel map
 		return nil, err
 	}
 
-	err = db.Save(model).Error
-	if err != nil {
-		return nil, err
+	exec := GetExecute("SAVE", form.GetDriver(parallel), "")
+	if e := exec(db, "", model); e == nil {
+		return model, nil
+	} else {
+		return nil, e.(error)
 	}
-
-	return model, nil
 }

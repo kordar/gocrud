@@ -2,35 +2,33 @@ package gocrud
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type EditorBody struct {
-	Conditions  []*condition `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
-	Editors     []*editor    `json:"editor,omitempty" form:"editor,omitempty"`
-	safeCounter int          // 防止无条件更新
+	Conditions  []condition `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
+	Editors     []editor    `json:"editor,omitempty" form:"editor,omitempty"`
+	safeCounter int         // 防止无条件更新
 	commonBody
 }
 
-func NewEditorBody(ctx *gin.Context) EditorBody {
+func NewEditorBody(driver string) EditorBody {
 	return EditorBody{
-		commonBody: commonBody{Ctx: ctx},
-		Conditions: make([]*condition, 0),
+		commonBody: commonBody{Driver: driver},
+		Conditions: make([]condition, 0),
 	}
 }
 
-func (form *EditorBody) where(db *gorm.DB, parallel map[string]string) *gorm.DB {
-	for _, condition := range form.Conditions {
-		db = condition.Where(db, parallel)
+func (form *EditorBody) where(db interface{}, parallel map[string]string) interface{} {
+	for _, c := range form.Conditions {
+		db = c.Where(db, parallel)
 	}
 	return db
 }
 
-func (form *EditorBody) whereSafe(db *gorm.DB, parallel map[string]string) *gorm.DB {
-	for _, condition := range form.Conditions {
+func (form *EditorBody) whereSafe(db interface{}, parallel map[string]string) interface{} {
+	for _, c := range form.Conditions {
 		flag := false
-		db, flag = condition.WhereSafe(db, parallel)
+		db, flag = c.WhereSafe(db, parallel)
 		if flag == true {
 			form.safeCounter++
 		}
@@ -41,26 +39,32 @@ func (form *EditorBody) whereSafe(db *gorm.DB, parallel map[string]string) *gorm
 // UpdateData the data for update
 func (form *EditorBody) UpdateData(parallel map[string]string) map[string]interface{} {
 	data := map[string]interface{}{}
-	for _, editor := range form.Editors {
-		k, v := editor.Param(parallel)
+	for _, exec := range form.Editors {
+		k, v := exec.Param(parallel)
 		data[k] = v
 	}
 	return data
 }
 
 // Updates update model object
-func (form *EditorBody) Updates(model interface{}, db *gorm.DB, parallel map[string]string) error {
-	if db, err := form.QuerySafe(db, parallel); err != nil {
+func (form *EditorBody) Updates(db interface{}, parallel map[string]string) error {
+	newDb, err := form.QuerySafe(db, parallel)
+	if err != nil {
 		return err
-	} else {
-		data := form.UpdateData(parallel)
-		db := db.Model(model).UpdateColumns(data)
-		return db.Error
 	}
+
+	exec := GetExecute("UPDATES", form.GetDriver(parallel), "")
+	data := form.UpdateData(parallel)
+	if e := exec(newDb, "", data); e == nil {
+		return nil
+	} else {
+		return e.(error)
+	}
+
 }
 
 // QuerySafe 防止空条件更新
-func (form *EditorBody) QuerySafe(db *gorm.DB, parallel map[string]string) (*gorm.DB, error) {
+func (form *EditorBody) QuerySafe(db interface{}, parallel map[string]string) (interface{}, error) {
 	db = form.whereSafe(db, parallel)
 	if form.safeCounter == 0 {
 		return db, errors.New("forbid no condition edit")
@@ -69,15 +73,15 @@ func (form *EditorBody) QuerySafe(db *gorm.DB, parallel map[string]string) (*gor
 }
 
 // Query 条件查询
-func (form *EditorBody) Query(db *gorm.DB, parallel map[string]string) *gorm.DB {
+func (form *EditorBody) Query(db interface{}, parallel map[string]string) interface{} {
 	return form.where(db, parallel)
 }
 
 // QueryCustom 自定义条件查询
 func (form *EditorBody) QueryCustom(
-	db *gorm.DB,
+	db interface{},
 	parallel map[string]string,
-	fun func(form *EditorBody, db *gorm.DB, parallel map[string]string) *gorm.DB,
-) *gorm.DB {
+	fun func(form *EditorBody, db interface{}, parallel map[string]string) interface{},
+) interface{} {
 	return fun(form, db, parallel)
 }

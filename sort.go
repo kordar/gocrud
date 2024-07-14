@@ -1,20 +1,9 @@
 package gocrud
 
 import (
-	"fmt"
 	"github.com/kordar/goutil"
-	"gorm.io/gorm"
 	"strings"
 )
-
-var sorts = map[string]sortOperator{
-	"ASC":  &ASC{},
-	"DESC": &DESC{},
-}
-
-type sortOperator interface {
-	execute(db *gorm.DB, field string) *gorm.DB
-}
 
 type sort struct {
 	Property string `json:"property" form:"property"`
@@ -23,7 +12,7 @@ type sort struct {
 	Type     string `json:"type" form:"type"`
 }
 
-func (c sort) Order(db *gorm.DB, parallel map[string]string) *gorm.DB {
+func (c sort) Order(db interface{}, parallel map[string]string) interface{} {
 	/**
 	 * 获取属性
 	 * {"property": "属性", "key": "键值", "field": "字段值"}
@@ -51,29 +40,6 @@ func (c sort) Order(db *gorm.DB, parallel map[string]string) *gorm.DB {
 		field = goutil.SnakeString(property)
 	}
 
-	t := strings.ToUpper(c.Type)
-	if t == "" {
-		t = "ASC"
-	}
-
-	o := sorts[t]
-	if o == nil {
-		o = &ASC{}
-	}
-
-	return o.execute(db, field)
-}
-
-type ASC struct {
-}
-
-func (A *ASC) execute(db *gorm.DB, field string) *gorm.DB {
-	return db.Order(fmt.Sprintf("%s ASC", field))
-}
-
-type DESC struct {
-}
-
-func (A *DESC) execute(db *gorm.DB, field string) *gorm.DB {
-	return db.Order(fmt.Sprintf("%s DESC", field))
+	exec := GetExecute(c.Type, parallel["driver"], "ASC")
+	return exec(db, field, "")
 }
