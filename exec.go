@@ -1,18 +1,5 @@
 package gocrud
 
-import (
-	"fmt"
-	"strings"
-)
-
-var lang = func() string {
-	return "en"
-}
-
-func SetLangFunc(f func() string) {
-	lang = f
-}
-
 type Operator = string
 
 const (
@@ -30,24 +17,16 @@ var execs = map[string]Execute{}
 // Execute Create,update,delete返回error
 type Execute func(db interface{}, field string, value interface{}, value2 ...interface{}) interface{}
 
-func GetName(name string, driver string) string {
-	if driver == "" {
-		return strings.ToUpper(name)
-	} else {
-		return fmt.Sprintf("%s:%s", strings.ToUpper(driver), strings.ToUpper(name))
-	}
-}
-
 func AddExecute(name string, execute Execute, driver string) {
-	key := GetName(name, driver)
+	key := GetNameWithDriver(name, driver)
 	execs[key] = execute
 }
 
 func GetExecute(name string, driver string, defaultName string) Execute {
-	key := GetName(name, driver)
+	key := GetNameWithDriver(name, driver)
 	exec := execs[key]
 	if exec == nil {
-		name = GetName(defaultName, driver)
+		name = GetNameWithDriver(defaultName, driver)
 		return execs[name]
 	}
 	return exec
