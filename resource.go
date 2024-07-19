@@ -5,18 +5,6 @@ import (
 	"github.com/kordar/gocfg"
 )
 
-type ResourceService[T interface{}, C interface{}] interface {
-	ResourceName() string
-	Search(body SearchBody[T, C]) SearchVO
-	SearchOne(body SearchBody[T, C]) SearchOneVO
-	Delete(body RemoveBody[T, C]) error
-	Add(body FormBody[T, C]) (interface{}, error)
-	Update(body FormBody[T, C]) (interface{}, error)
-	Edit(body EditorBody[T, C]) error
-	Configs() map[string]interface{}
-	DriverName() string
-}
-
 type resourceContainer[T interface{}, C interface{}] struct {
 	resourceServiceHashMap map[string]ResourceService[T, C]
 }
