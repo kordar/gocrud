@@ -29,22 +29,22 @@ func (common *CommonResourceService[T, C]) SearchOne(body SearchBody[T, C]) Sear
 }
 
 func (common *CommonResourceService[T, C]) Delete(body RemoveBody[T, C]) error {
-	message := gocfg.GetSectionValue(lang(), "resource.errors.not.provided", "language")
+	message := gocfg.GetSectionValue(Lang(body.Ctx()), "resource.errors.no_provided", "language")
 	return errors.New(message)
 }
 
 func (common *CommonResourceService[T, C]) Add(body FormBody[T, C]) (interface{}, error) {
-	message := gocfg.GetSectionValue(lang(), "resource.errors.not.provided", "language")
+	message := gocfg.GetSectionValue(Lang(body.Ctx()), "resource.errors.no_provided", "language")
 	return nil, errors.New(message)
 }
 
 func (common *CommonResourceService[T, C]) Update(body FormBody[T, C]) (interface{}, error) {
-	message := gocfg.GetSectionValue(lang(), "resource.errors.not.provided", "language")
+	message := gocfg.GetSectionValue(Lang(body.Ctx()), "resource.errors.no_provided", "language")
 	return nil, errors.New(message)
 }
 
 func (common *CommonResourceService[T, C]) Edit(body EditorBody[T, C]) error {
-	message := gocfg.GetSectionValue(lang(), "resource.errors.not.provided", "language")
+	message := gocfg.GetSectionValue(Lang(body.Ctx()), "resource.errors.no_provided", "language")
 	return errors.New(message)
 }
 
