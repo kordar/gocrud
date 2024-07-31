@@ -6,12 +6,19 @@ import (
 	"strings"
 )
 
-var Lang = func(items ...interface{}) string {
-	return ""
+var (
+	lang   = "language"
+	LangFn = func(args ...interface{}) string {
+		return ""
+	}
+)
+
+func SetLangValue(value string) {
+	lang = value
 }
 
-func SetLangFunc(f func(items ...interface{}) string) {
-	Lang = f
+func SetLangFn(f func(args ...interface{}) string) {
+	LangFn = f
 }
 
 func GetNameWithDriver(name string, driver string) string {

@@ -5,37 +5,37 @@ import (
 	"github.com/kordar/gocfg"
 )
 
-type resourceContainer[T interface{}, C interface{}] struct {
-	resourceServiceHashMap map[string]ResourceService[T, C]
+type resourceContainer struct {
+	resourceServiceHashMap map[string]ResourceService
 }
 
-func (container *resourceContainer[T, C]) AddResourceService(service ResourceService[T, C]) {
+func (container *resourceContainer) AddResourceService(service ResourceService) {
 	container.resourceServiceHashMap[service.ResourceName()] = service
 }
 
-func (container *resourceContainer[T, C]) GetResourceService(apiName string) ResourceService[T, C] {
+func (container *resourceContainer) GetResourceService(apiName string) ResourceService {
 	return container.resourceServiceHashMap[apiName]
 }
 
-type ResourceManager[T interface{}, C interface{}] struct {
-	container resourceContainer[T, C]
+type ResourceManager struct {
+	container resourceContainer
 }
 
-func NewResourceManager[T interface{}, C interface{}]() *ResourceManager[T, C] {
-	return &ResourceManager[T, C]{
-		container: resourceContainer[T, C]{
-			resourceServiceHashMap: make(map[string]ResourceService[T, C]),
+func NewResourceManager() *ResourceManager {
+	return &ResourceManager{
+		container: resourceContainer{
+			resourceServiceHashMap: make(map[string]ResourceService),
 		},
 	}
 }
 
-func (mgr *ResourceManager[T, C]) AddResourceService(service ResourceService[T, C]) {
+func (mgr *ResourceManager) AddResourceService(service ResourceService) {
 	mgr.container.AddResourceService(service)
 }
 
-func (mgr *ResourceManager[T, C]) SelectOne(apiName string, searchBody SearchBody[T, C]) (SearchOneVO, error) {
+func (mgr *ResourceManager) SelectOne(apiName string, searchBody SearchBody) (SearchOneVO, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		lang := Lang(searchBody.Ctx())
+		lang := LangFn(searchBody.Ctx())
 		if lang == "" {
 			return SearchOneVO{}, errors.New("resource view not exist")
 		}
@@ -45,9 +45,9 @@ func (mgr *ResourceManager[T, C]) SelectOne(apiName string, searchBody SearchBod
 	return mgr.container.GetResourceService(apiName).SearchOne(searchBody), nil
 }
 
-func (mgr *ResourceManager[T, C]) Select(apiName string, searchBody SearchBody[T, C]) (SearchVO, error) {
+func (mgr *ResourceManager) Select(apiName string, searchBody SearchBody) (SearchVO, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		lang := Lang(searchBody.Ctx())
+		lang := LangFn(searchBody.Ctx())
 		if lang == "" {
 			return SearchVO{}, errors.New("resource list not exist")
 		}
@@ -57,9 +57,9 @@ func (mgr *ResourceManager[T, C]) Select(apiName string, searchBody SearchBody[T
 	return mgr.container.GetResourceService(apiName).Search(searchBody), nil
 }
 
-func (mgr *ResourceManager[T, C]) Add(apiName string, formBody FormBody[T, C]) (interface{}, error) {
+func (mgr *ResourceManager) Add(apiName string, formBody FormBody) (interface{}, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		lang := Lang(formBody.Ctx())
+		lang := LangFn(formBody.Ctx())
 		if lang == "" {
 			return nil, errors.New("resource add not exist")
 		}
@@ -69,9 +69,9 @@ func (mgr *ResourceManager[T, C]) Add(apiName string, formBody FormBody[T, C]) (
 	return mgr.container.GetResourceService(apiName).Add(formBody)
 }
 
-func (mgr *ResourceManager[T, C]) Update(apiName string, formBody FormBody[T, C]) (interface{}, error) {
+func (mgr *ResourceManager) Update(apiName string, formBody FormBody) (interface{}, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		lang := Lang(formBody.Ctx())
+		lang := LangFn(formBody.Ctx())
 		if lang == "" {
 			return nil, errors.New("resource update not exist")
 		}
@@ -81,9 +81,9 @@ func (mgr *ResourceManager[T, C]) Update(apiName string, formBody FormBody[T, C]
 	return mgr.container.GetResourceService(apiName).Update(formBody)
 }
 
-func (mgr *ResourceManager[T, C]) Delete(apiName string, removeBody RemoveBody[T, C]) error {
+func (mgr *ResourceManager) Delete(apiName string, removeBody RemoveBody) error {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		lang := Lang(removeBody.Ctx())
+		lang := LangFn(removeBody.Ctx())
 		if lang == "" {
 			return errors.New("resource delete not exist")
 		}
@@ -93,9 +93,9 @@ func (mgr *ResourceManager[T, C]) Delete(apiName string, removeBody RemoveBody[T
 	return mgr.container.GetResourceService(apiName).Delete(removeBody)
 }
 
-func (mgr *ResourceManager[T, C]) Edit(apiName string, editorBody EditorBody[T, C]) error {
+func (mgr *ResourceManager) Edit(apiName string, editorBody EditorBody) error {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		lang := Lang(editorBody.Ctx())
+		lang := LangFn(editorBody.Ctx())
 		if lang == "" {
 			return errors.New("resource edit not exist")
 		}
@@ -105,21 +105,21 @@ func (mgr *ResourceManager[T, C]) Edit(apiName string, editorBody EditorBody[T, 
 	return mgr.container.GetResourceService(apiName).Edit(editorBody)
 }
 
-func (mgr *ResourceManager[T, C]) Configs(apiName string, ctx interface{}) (map[string]interface{}, error) {
+func (mgr *ResourceManager) Configs(apiName string, ctx interface{}) (map[string]interface{}, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		lang := Lang(ctx)
+		lang := LangFn(ctx)
 		if lang == "" {
 			return nil, errors.New("resource configs not exist")
 		}
 		message := gocfg.GetSectionValue(lang, "resource.errors.configs_not_exist", "language")
 		return nil, errors.New(message)
 	}
-	return mgr.container.GetResourceService(apiName).Configs(), nil
+	return mgr.container.GetResourceService(apiName).Configs(ctx), nil
 }
 
-func (mgr *ResourceManager[T, C]) DriverName(apiName string, ctx interface{}) string {
+func (mgr *ResourceManager) DriverName(apiName string, ctx interface{}) string {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
-		lang := Lang(ctx)
+		lang := LangFn(ctx)
 		if lang == "" {
 			return "resource driver name required"
 		}

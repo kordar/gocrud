@@ -14,7 +14,7 @@ const (
 
 var execs = map[string]Execute{}
 
-// Execute Create,update,delete返回error
+// Execute create,update,delete返回error
 type Execute func(db interface{}, field string, value interface{}, value2 ...interface{}) interface{}
 
 func AddExecute(name string, execute Execute, driver string) {

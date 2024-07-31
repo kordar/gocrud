@@ -1,6 +1,8 @@
 package gocrud
 
-import logger "github.com/kordar/gologger"
+import (
+	logger "github.com/kordar/gologger"
+)
 
 type Sort struct {
 	Property string `json:"property" form:"property"`

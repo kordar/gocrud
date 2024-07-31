@@ -5,21 +5,21 @@ import (
 	"errors"
 )
 
-type FormBody[T interface{}, C interface{}] struct {
+type FormBody struct {
 	Conditions  []Condition `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
 	Object      interface{} `json:"object,omitempty" form:"object,omitempty"`
 	safeCounter int         // 防止无条件更新
-	*CommonBody[C]
+	*CommonBody
 }
 
-func NewFormBody[T interface{}, C interface{}](driver string, ctx C) FormBody[T, C] {
-	return FormBody[T, C]{
-		CommonBody: NewCommonBody[C](driver, ctx),
+func NewFormBody(driver string, ctx interface{}) FormBody {
+	return FormBody{
+		CommonBody: NewCommonBody(driver, ctx),
 		Conditions: make([]Condition, 0),
 	}
 }
 
-func (form *FormBody[T, C]) Unmarshal(target interface{}) error {
+func (form *FormBody) Unmarshal(target interface{}) error {
 	if marshal, err := json.Marshal(form.Object); err != nil {
 		return err
 	} else {
@@ -27,22 +27,22 @@ func (form *FormBody[T, C]) Unmarshal(target interface{}) error {
 	}
 }
 
-func (form *FormBody[T, C]) where(db T, parallel map[string]string) T {
+func (form *FormBody) where(db interface{}, parallel map[string]string) interface{} {
 	parallel = form.LoadDriverName(parallel)
 	if form.Conditions != nil {
 		for _, exec := range form.Conditions {
-			db = exec.Where(db, parallel).(T)
+			db = exec.Where(db, parallel)
 		}
 	}
 	return db
 }
 
-func (form *FormBody[T, C]) whereSafe(db T, parallel map[string]string) T {
+func (form *FormBody) whereSafe(db interface{}, parallel map[string]string) interface{} {
 	parallel = form.LoadDriverName(parallel)
 	if form.Conditions != nil {
 		for _, exec := range form.Conditions {
 			db2, flag := exec.WhereSafe(db, parallel)
-			db = db2.(T)
+			db = db2
 			if flag == true {
 				form.safeCounter++
 			}
@@ -51,11 +51,11 @@ func (form *FormBody[T, C]) whereSafe(db T, parallel map[string]string) T {
 	return db
 }
 
-func (form *FormBody[T, C]) Query(db T, parallel map[string]string) T {
+func (form *FormBody) Query(db interface{}, parallel map[string]string) interface{} {
 	return form.where(db, parallel)
 }
 
-func (form *FormBody[T, C]) QuerySafe(db T, parallel map[string]string) (T, error) {
+func (form *FormBody) QuerySafe(db interface{}, parallel map[string]string) (interface{}, error) {
 	db = form.whereSafe(db, parallel)
 	if form.safeCounter == 0 {
 		return db, errors.New("forbid no condition update")
@@ -63,12 +63,12 @@ func (form *FormBody[T, C]) QuerySafe(db T, parallel map[string]string) (T, erro
 	return db, nil
 }
 
-func (form *FormBody[T, C]) QueryCustom(f func(form *FormBody[T, C]) T) T {
+func (form *FormBody) QueryCustom(f func(form *FormBody) interface{}) interface{} {
 	return f(form)
 }
 
 // Create 创建model
-func (form *FormBody[T, C]) Create(model interface{}, db T, parallel map[string]string) (interface{}, error) {
+func (form *FormBody) Create(model interface{}, db interface{}, parallel map[string]string) (interface{}, error) {
 	err := form.Unmarshal(model)
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (form *FormBody[T, C]) Create(model interface{}, db T, parallel map[string]
 }
 
 // CreateWithValid 创建并且校验提交参数
-func (form *FormBody[T, C]) CreateWithValid(model interface{}, db T, parallel map[string]string, valid func(model interface{}) error) (interface{}, error) {
+func (form *FormBody) CreateWithValid(model interface{}, db interface{}, parallel map[string]string, valid func(model interface{}) error) (interface{}, error) {
 	err := form.Unmarshal(model)
 	if err != nil {
 		return nil, err
@@ -111,7 +111,7 @@ func (form *FormBody[T, C]) CreateWithValid(model interface{}, db T, parallel ma
 }
 
 // Update 更新模型
-func (form *FormBody[T, C]) Update(model interface{}, db T, parallel map[string]string) (interface{}, error) {
+func (form *FormBody) Update(model interface{}, db interface{}, parallel map[string]string) (interface{}, error) {
 
 	err := form.Unmarshal(model)
 	if err != nil {
@@ -137,7 +137,7 @@ func (form *FormBody[T, C]) Update(model interface{}, db T, parallel map[string]
 }
 
 // UpdateWithValid 更新并且校验提交参数
-func (form *FormBody[T, C]) UpdateWithValid(model interface{}, db T, parallel map[string]string, valid func(model interface{}) error) (interface{}, error) {
+func (form *FormBody) UpdateWithValid(model interface{}, db interface{}, parallel map[string]string, valid func(model interface{}) error) (interface{}, error) {
 
 	err := form.Unmarshal(model)
 	if err != nil {
@@ -167,7 +167,7 @@ func (form *FormBody[T, C]) UpdateWithValid(model interface{}, db T, parallel ma
 }
 
 // UpdateMapWithValid 更新并且校验提交参数
-func (form *FormBody[T, C]) UpdateMapWithValid(model interface{}, db T, parallel map[string]string, valid func(model interface{}) (error, map[string]interface{})) (interface{}, error) {
+func (form *FormBody) UpdateMapWithValid(model interface{}, db interface{}, parallel map[string]string, valid func(model interface{}) (error, map[string]interface{})) (interface{}, error) {
 
 	err := form.Unmarshal(model)
 	if err != nil {
@@ -196,8 +196,8 @@ func (form *FormBody[T, C]) UpdateMapWithValid(model interface{}, db T, parallel
 	}
 }
 
-// SaveWithValid 更新并且校验提交参数
-func (form *FormBody[T, C]) Save(model interface{}, db T, parallel map[string]string) (interface{}, error) {
+// Save 更新并且校验提交参数
+func (form *FormBody) Save(model interface{}, db interface{}, parallel map[string]string) (interface{}, error) {
 
 	err := form.Unmarshal(model)
 	if err != nil {
@@ -218,7 +218,7 @@ func (form *FormBody[T, C]) Save(model interface{}, db T, parallel map[string]st
 }
 
 // SaveWithValid 更新并且校验提交参数
-func (form *FormBody[T, C]) SaveWithValid(model interface{}, db T, parallel map[string]string, valid func(model interface{}) error) (interface{}, error) {
+func (form *FormBody) SaveWithValid(model interface{}, db interface{}, parallel map[string]string, valid func(model interface{}) error) (interface{}, error) {
 
 	err := form.Unmarshal(model)
 	if err != nil {

@@ -2,31 +2,31 @@ package gocrud
 
 import "errors"
 
-type RemoveBody[T interface{}, C interface{}] struct {
+type RemoveBody struct {
 	Data        map[string]interface{} `json:"data,omitempty" form:"data,omitempty"`             // 数据
 	Conditions  []Condition            `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
 	safeCounter int                    // 防止无条件更新
-	*CommonBody[C]
+	*CommonBody
 }
 
-func NewRemoveBody[T interface{}, C interface{}](driver string, ctx C) RemoveBody[T, C] {
-	return RemoveBody[T, C]{
+func NewRemoveBody(driver string, ctx interface{}) RemoveBody {
+	return RemoveBody{
 		Data:       make(map[string]interface{}),
 		Conditions: make([]Condition, 0),
-		CommonBody: NewCommonBody[C](driver, ctx),
+		CommonBody: NewCommonBody(driver, ctx),
 	}
 }
 
-func (remove *RemoveBody[T, C]) where(db T, parallel map[string]string) T {
+func (remove *RemoveBody) where(db interface{}, parallel map[string]string) interface{} {
 	parallel = remove.LoadDriverName(parallel)
 	for _, exec := range remove.Conditions {
-		db = exec.Where(db, parallel).(T)
+		db = exec.Where(db, parallel)
 		remove.safeCounter++
 	}
 	return db
 }
 
-func (remove *RemoveBody[T, C]) QuerySafe(db T, parallel map[string]string) (T, error) {
+func (remove *RemoveBody) QuerySafe(db interface{}, parallel map[string]string) (interface{}, error) {
 	db = remove.where(db, parallel)
 	if remove.safeCounter == 0 {
 		return db, errors.New("forbid no condition remove")
@@ -34,11 +34,11 @@ func (remove *RemoveBody[T, C]) QuerySafe(db T, parallel map[string]string) (T, 
 	return db, nil
 }
 
-func (remove *RemoveBody[T, C]) Query(db T, parallel map[string]string) T {
+func (remove *RemoveBody) Query(db interface{}, parallel map[string]string) interface{} {
 	return remove.where(db, parallel)
 }
 
-func (remove *RemoveBody[T, C]) Delete(model interface{}, db T, parallel map[string]string) error {
+func (remove *RemoveBody) Delete(model interface{}, db interface{}, parallel map[string]string) error {
 	if tx, err := remove.QuerySafe(db, nil); err != nil {
 		return err
 	} else {
@@ -55,6 +55,6 @@ func (remove *RemoveBody[T, C]) Delete(model interface{}, db T, parallel map[str
 	}
 }
 
-func (remove *RemoveBody[T, C]) QueryCustom(f func(form *RemoveBody[T, C]) T) T {
+func (remove *RemoveBody) QueryCustom(f func(form *RemoveBody) interface{}) interface{} {
 	return f(remove)
 }

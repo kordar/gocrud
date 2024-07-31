@@ -49,16 +49,16 @@
 // 设置多语言
 func SetLangFunc(f func() string)
 // 实现resource接口
-type ResourceService[T interface{}, C interface{}] interface {
+type ResourceService interface {
     ResourceName() string
-    Search(body SearchBody[T, C]) SearchVO
-    SearchOne(body SearchBody[T, C]) SearchOneVO
-    Delete(body RemoveBody[T, C]) error
-    Add(body FormBody[T, C]) (interface{}, error)
-    Update(body FormBody[T, C]) (interface{}, error)
-    Edit(body EditorBody[T, C]) error
-    Configs() map[string]interface{}
     DriverName() string
+    Configs() map[string]interface{}
+    Search(body SearchBody) SearchVO
+    SearchOne(body SearchBody) SearchOneVO
+    Delete(body RemoveBody) error
+    Add(body FormBody) (interface{}, error)
+    Update(body FormBody) (interface{}, error)
+    Edit(body EditorBody) error
 }
 // 初始化resource service管理容器
 var Manager = gocrud.NewResourceManager()
