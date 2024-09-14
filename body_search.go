@@ -1,6 +1,9 @@
 package gocrud
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 type SearchBody struct {
 	Page       int                    `json:"page" form:"page"`
@@ -11,7 +14,7 @@ type SearchBody struct {
 	*CommonBody
 }
 
-func NewSearchBody(driver string, ctx interface{}) SearchBody {
+func NewSearchBody(driver string, ctx context.Context) SearchBody {
 	return SearchBody{
 		Page:       1,
 		PageSize:   15,
@@ -21,36 +24,36 @@ func NewSearchBody(driver string, ctx interface{}) SearchBody {
 	}
 }
 
-func (search *SearchBody) where(db interface{}, parallel map[string]string) interface{} {
-	parallel = search.LoadDriverName(parallel)
+func (search *SearchBody) where(db interface{}, params map[string]string) interface{} {
+	params = search.LoadDriverName(params)
 	if search.Conditions != nil {
 		for _, exec := range search.Conditions {
-			db = exec.Where(db, parallel)
+			db = exec.Where(db, params)
 		}
 	}
 	return db
 }
 
-func (search *SearchBody) order(db interface{}, parallel map[string]string) interface{} {
-	parallel = search.LoadDriverName(parallel)
+func (search *SearchBody) order(db interface{}, params map[string]string) interface{} {
+	params = search.LoadDriverName(params)
 	if search.Sorts != nil {
 		for _, exec := range search.Sorts {
-			db = exec.Order(db, parallel)
+			db = exec.Order(db, params)
 		}
 	}
 	return db
 }
 
-func (search *SearchBody) Query(db interface{}, parallel map[string]string) interface{} {
-	db = search.where(db, parallel)
-	db = search.order(db, parallel)
+func (search *SearchBody) Query(db interface{}, params map[string]string) interface{} {
+	db = search.where(db, params)
+	db = search.order(db, params)
 	return db
 }
 
-func (search *SearchBody) Paginate(db interface{}, parallel map[string]string) (interface{}, error) {
-	db = search.Query(db, parallel)
+func (search *SearchBody) Paginate(db interface{}, params map[string]string) (interface{}, error) {
+	db = search.Query(db, params)
 	offset := (search.Page - 1) * search.PageSize
-	exec := GetExecute("PAGE", search.DriverName(parallel), "")
+	exec := GetExecute("PAGE", search.DriverName(params), "")
 	if exec == nil {
 		return db, errors.New("execution function for 'PAGE' not found")
 	}

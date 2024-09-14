@@ -1,6 +1,9 @@
 package gocrud
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 type RemoveBody struct {
 	Data        map[string]interface{} `json:"data,omitempty" form:"data,omitempty"`             // 数据
@@ -9,7 +12,7 @@ type RemoveBody struct {
 	*CommonBody
 }
 
-func NewRemoveBody(driver string, ctx interface{}) RemoveBody {
+func NewRemoveBody(driver string, ctx context.Context) RemoveBody {
 	return RemoveBody{
 		Data:       make(map[string]interface{}),
 		Conditions: make([]Condition, 0),
@@ -17,32 +20,32 @@ func NewRemoveBody(driver string, ctx interface{}) RemoveBody {
 	}
 }
 
-func (remove *RemoveBody) where(db interface{}, parallel map[string]string) interface{} {
-	parallel = remove.LoadDriverName(parallel)
+func (remove *RemoveBody) where(db interface{}, params map[string]string) interface{} {
+	params = remove.LoadDriverName(params)
 	for _, exec := range remove.Conditions {
-		db = exec.Where(db, parallel)
+		db = exec.Where(db, params)
 		remove.safeCounter++
 	}
 	return db
 }
 
-func (remove *RemoveBody) QuerySafe(db interface{}, parallel map[string]string) (interface{}, error) {
-	db = remove.where(db, parallel)
+func (remove *RemoveBody) QuerySafe(db interface{}, params map[string]string) (interface{}, error) {
+	db = remove.where(db, params)
 	if remove.safeCounter == 0 {
 		return db, errors.New("forbid no condition remove")
 	}
 	return db, nil
 }
 
-func (remove *RemoveBody) Query(db interface{}, parallel map[string]string) interface{} {
-	return remove.where(db, parallel)
+func (remove *RemoveBody) Query(db interface{}, params map[string]string) interface{} {
+	return remove.where(db, params)
 }
 
-func (remove *RemoveBody) Delete(model interface{}, db interface{}, parallel map[string]string) error {
+func (remove *RemoveBody) Delete(model interface{}, db interface{}, params map[string]string) error {
 	if tx, err := remove.QuerySafe(db, nil); err != nil {
 		return err
 	} else {
-		exec := GetExecute("DELETE", remove.DriverName(parallel), "")
+		exec := GetExecute("DELETE", remove.DriverName(params), "")
 		if exec == nil {
 			return errors.New("execution function for 'DELETE' not found")
 		}

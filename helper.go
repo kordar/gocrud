@@ -1,24 +1,14 @@
 package gocrud
 
 import (
+	"context"
 	"fmt"
 	"github.com/kordar/goutil"
 	"strings"
 )
 
-var (
-	lang   = "language"
-	LangFn = func(args ...interface{}) string {
-		return ""
-	}
-)
-
-func SetLangValue(value string) {
-	lang = value
-}
-
-func SetLangFn(f func(args ...interface{}) string) {
-	LangFn = f
+var MessageFn = func(ctx context.Context, message string) string {
+	return message
 }
 
 func GetNameWithDriver(name string, driver string) string {

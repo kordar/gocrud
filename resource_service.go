@@ -1,18 +1,18 @@
 package gocrud
 
 import (
+	"context"
 	"errors"
-	"github.com/kordar/gocfg"
 )
 
 type ResourceService interface {
 	ResourceName() string
 	DriverName() string
-	Configs(ctx interface{}) map[string]interface{}
+	Configs(ctx context.Context) map[string]interface{}
 	Search(body SearchBody) SearchVO
 	SearchOne(body SearchBody) SearchOneVO
-	Delete(body RemoveBody) error
-	Add(body FormBody) (interface{}, error)
+	Remove(body RemoveBody) error
+	Create(body FormBody) (interface{}, error)
 	Update(body FormBody) (interface{}, error)
 	Edit(body EditorBody) error
 }
@@ -28,23 +28,23 @@ func (common *CommonResourceService) SearchOne(body SearchBody) SearchOneVO {
 	return SearchOneVO{}
 }
 
-func (common *CommonResourceService) Delete(body RemoveBody) error {
-	message := gocfg.GetSectionValue(LangFn(body.Ctx()), "resource.errors.no_provided", "language")
+func (common *CommonResourceService) Remove(body RemoveBody) error {
+	message := MessageFn(body.Ctx(), "remove not found")
 	return errors.New(message)
 }
 
-func (common *CommonResourceService) Add(body FormBody) (interface{}, error) {
-	message := gocfg.GetSectionValue(LangFn(body.Ctx()), "resource.errors.no_provided", "language")
+func (common *CommonResourceService) Create(body FormBody) (interface{}, error) {
+	message := MessageFn(body.Ctx(), "create not found")
 	return nil, errors.New(message)
 }
 
 func (common *CommonResourceService) Update(body FormBody) (interface{}, error) {
-	message := gocfg.GetSectionValue(LangFn(body.Ctx()), "resource.errors.no_provided", "language")
+	message := MessageFn(body.Ctx(), "update not found")
 	return nil, errors.New(message)
 }
 
 func (common *CommonResourceService) Edit(body EditorBody) error {
-	message := gocfg.GetSectionValue(LangFn(body.Ctx()), "resource.errors.no_provided", "language")
+	message := MessageFn(body.Ctx(), "edit not found")
 	return errors.New(message)
 }
 
@@ -52,6 +52,6 @@ func (common *CommonResourceService) DriverName() string {
 	return "gorm"
 }
 
-func (common *CommonResourceService) Configs(ctx interface{}) map[string]interface{} {
+func (common *CommonResourceService) Configs(ctx context.Context) map[string]interface{} {
 	return map[string]interface{}{}
 }

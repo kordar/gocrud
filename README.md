@@ -52,11 +52,11 @@ func SetLangFunc(f func() string)
 type ResourceService interface {
     ResourceName() string
     DriverName() string
-    Configs() map[string]interface{}
+    Configs(ctx context.Context) map[string]interface{}
     Search(body SearchBody) SearchVO
     SearchOne(body SearchBody) SearchOneVO
-    Delete(body RemoveBody) error
-    Add(body FormBody) (interface{}, error)
+    Remove(body RemoveBody) error
+    Create(body FormBody) (interface{}, error)
     Update(body FormBody) (interface{}, error)
     Edit(body EditorBody) error
 }

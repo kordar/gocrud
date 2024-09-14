@@ -1,29 +1,31 @@
 package gocrud
 
+import "context"
+
 type CommonBody struct {
-	ctx    interface{}
+	ctx    context.Context
 	driver string
 }
 
-func NewCommonBody(driverName string, ctx interface{}) *CommonBody {
+func NewCommonBody(driverName string, ctx context.Context) *CommonBody {
 	return &CommonBody{ctx: ctx, driver: driverName}
 }
 
-func (common *CommonBody) DriverName(parallel map[string]string) string {
-	if parallel == nil || parallel["driver"] == "" {
+func (common *CommonBody) DriverName(params map[string]string) string {
+	if params == nil || params["driver"] == "" {
 		return common.driver
 	}
-	return parallel["driver"]
+	return params["driver"]
 }
 
-func (common *CommonBody) Ctx() interface{} {
+func (common *CommonBody) Ctx() context.Context {
 	return common.ctx
 }
 
-func (common *CommonBody) LoadDriverName(parallel map[string]string) map[string]string {
-	if parallel == nil {
-		parallel = map[string]string{}
+func (common *CommonBody) LoadDriverName(params map[string]string) map[string]string {
+	if params == nil {
+		params = map[string]string{}
 	}
-	parallel["driver"] = common.DriverName(parallel)
-	return parallel
+	params["driver"] = common.DriverName(params)
+	return params
 }

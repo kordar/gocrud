@@ -1,6 +1,7 @@
 package gocrud
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 )
@@ -12,7 +13,7 @@ type FormBody struct {
 	*CommonBody
 }
 
-func NewFormBody(driver string, ctx interface{}) FormBody {
+func NewFormBody(driver string, ctx context.Context) FormBody {
 	return FormBody{
 		CommonBody: NewCommonBody(driver, ctx),
 		Conditions: make([]Condition, 0),
@@ -27,21 +28,21 @@ func (form *FormBody) Unmarshal(target interface{}) error {
 	}
 }
 
-func (form *FormBody) where(db interface{}, parallel map[string]string) interface{} {
-	parallel = form.LoadDriverName(parallel)
+func (form *FormBody) where(db interface{}, params map[string]string) interface{} {
+	params = form.LoadDriverName(params)
 	if form.Conditions != nil {
 		for _, exec := range form.Conditions {
-			db = exec.Where(db, parallel)
+			db = exec.Where(db, params)
 		}
 	}
 	return db
 }
 
-func (form *FormBody) whereSafe(db interface{}, parallel map[string]string) interface{} {
-	parallel = form.LoadDriverName(parallel)
+func (form *FormBody) whereSafe(db interface{}, params map[string]string) interface{} {
+	params = form.LoadDriverName(params)
 	if form.Conditions != nil {
 		for _, exec := range form.Conditions {
-			db2, flag := exec.WhereSafe(db, parallel)
+			db2, flag := exec.WhereSafe(db, params)
 			db = db2
 			if flag == true {
 				form.safeCounter++
@@ -51,12 +52,12 @@ func (form *FormBody) whereSafe(db interface{}, parallel map[string]string) inte
 	return db
 }
 
-func (form *FormBody) Query(db interface{}, parallel map[string]string) interface{} {
-	return form.where(db, parallel)
+func (form *FormBody) Query(db interface{}, params map[string]string) interface{} {
+	return form.where(db, params)
 }
 
-func (form *FormBody) QuerySafe(db interface{}, parallel map[string]string) (interface{}, error) {
-	db = form.whereSafe(db, parallel)
+func (form *FormBody) QuerySafe(db interface{}, params map[string]string) (interface{}, error) {
+	db = form.whereSafe(db, params)
 	if form.safeCounter == 0 {
 		return db, errors.New("forbid no condition update")
 	}
@@ -68,13 +69,13 @@ func (form *FormBody) QueryCustom(f func(form *FormBody) interface{}) interface{
 }
 
 // Create 创建model
-func (form *FormBody) Create(model interface{}, db interface{}, parallel map[string]string) (interface{}, error) {
+func (form *FormBody) Create(model interface{}, db interface{}, params map[string]string) (interface{}, error) {
 	err := form.Unmarshal(model)
 	if err != nil {
 		return nil, err
 	}
 
-	exec := GetExecute("CREATE", form.DriverName(parallel), "")
+	exec := GetExecute("CREATE", form.DriverName(params), "")
 	if exec == nil {
 		return nil, errors.New("execution function for 'CREATE' not found")
 	}
@@ -87,7 +88,7 @@ func (form *FormBody) Create(model interface{}, db interface{}, parallel map[str
 }
 
 // CreateWithValid 创建并且校验提交参数
-func (form *FormBody) CreateWithValid(model interface{}, db interface{}, parallel map[string]string, valid func(model interface{}) error) (interface{}, error) {
+func (form *FormBody) CreateWithValid(model interface{}, db interface{}, params map[string]string, valid func(model interface{}) error) (interface{}, error) {
 	err := form.Unmarshal(model)
 	if err != nil {
 		return nil, err
@@ -98,7 +99,7 @@ func (form *FormBody) CreateWithValid(model interface{}, db interface{}, paralle
 		return nil, err
 	}
 
-	exec := GetExecute("CREATE", form.DriverName(parallel), "")
+	exec := GetExecute("CREATE", form.DriverName(params), "")
 	if exec == nil {
 		return nil, errors.New("execution function for 'CREATE' not found")
 	}
@@ -111,7 +112,7 @@ func (form *FormBody) CreateWithValid(model interface{}, db interface{}, paralle
 }
 
 // Update 更新模型
-func (form *FormBody) Update(model interface{}, db interface{}, parallel map[string]string) (interface{}, error) {
+func (form *FormBody) Update(model interface{}, db interface{}, params map[string]string) (interface{}, error) {
 
 	err := form.Unmarshal(model)
 	if err != nil {
@@ -119,12 +120,12 @@ func (form *FormBody) Update(model interface{}, db interface{}, parallel map[str
 	}
 
 	// TODO 更新model必须提供有效的更新条件
-	db, err = form.QuerySafe(db, parallel)
+	db, err = form.QuerySafe(db, params)
 	if err != nil {
 		return nil, err
 	}
 
-	exec := GetExecute("UPDATES", form.DriverName(parallel), "")
+	exec := GetExecute("UPDATES", form.DriverName(params), "")
 	if exec == nil {
 		return nil, errors.New("execution function for 'UPDATES' not found")
 	}
@@ -137,7 +138,7 @@ func (form *FormBody) Update(model interface{}, db interface{}, parallel map[str
 }
 
 // UpdateWithValid 更新并且校验提交参数
-func (form *FormBody) UpdateWithValid(model interface{}, db interface{}, parallel map[string]string, valid func(model interface{}) error) (interface{}, error) {
+func (form *FormBody) UpdateWithValid(model interface{}, db interface{}, params map[string]string, valid func(model interface{}) error) (interface{}, error) {
 
 	err := form.Unmarshal(model)
 	if err != nil {
@@ -149,12 +150,12 @@ func (form *FormBody) UpdateWithValid(model interface{}, db interface{}, paralle
 		return nil, err
 	}
 
-	db, err = form.QuerySafe(db, parallel)
+	db, err = form.QuerySafe(db, params)
 	if err != nil {
 		return nil, err
 	}
 
-	exec := GetExecute("UPDATES", form.DriverName(parallel), "")
+	exec := GetExecute("UPDATES", form.DriverName(params), "")
 	if exec == nil {
 		return nil, errors.New("execution function for 'UPDATES' not found")
 	}
@@ -167,7 +168,7 @@ func (form *FormBody) UpdateWithValid(model interface{}, db interface{}, paralle
 }
 
 // UpdateMapWithValid 更新并且校验提交参数
-func (form *FormBody) UpdateMapWithValid(model interface{}, db interface{}, parallel map[string]string, valid func(model interface{}) (error, map[string]interface{})) (interface{}, error) {
+func (form *FormBody) UpdateMapWithValid(model interface{}, db interface{}, params map[string]string, valid func(model interface{}) (error, map[string]interface{})) (interface{}, error) {
 
 	err := form.Unmarshal(model)
 	if err != nil {
@@ -179,12 +180,12 @@ func (form *FormBody) UpdateMapWithValid(model interface{}, db interface{}, para
 		return nil, err
 	}
 
-	db, err = form.QuerySafe(db, parallel)
+	db, err = form.QuerySafe(db, params)
 	if err != nil {
 		return nil, err
 	}
 
-	exec := GetExecute("UPDATES", form.DriverName(parallel), "")
+	exec := GetExecute("UPDATES", form.DriverName(params), "")
 	if exec == nil {
 		return nil, errors.New("execution function for 'UPDATES' not found")
 	}
@@ -197,14 +198,14 @@ func (form *FormBody) UpdateMapWithValid(model interface{}, db interface{}, para
 }
 
 // Save 更新并且校验提交参数
-func (form *FormBody) Save(model interface{}, db interface{}, parallel map[string]string) (interface{}, error) {
+func (form *FormBody) Save(model interface{}, db interface{}, params map[string]string) (interface{}, error) {
 
 	err := form.Unmarshal(model)
 	if err != nil {
 		return nil, err
 	}
 
-	exec := GetExecute("SAVE", form.DriverName(parallel), "")
+	exec := GetExecute("SAVE", form.DriverName(params), "")
 	if exec == nil {
 		return nil, errors.New("execution function for 'SAVE' not found")
 	}
@@ -218,7 +219,7 @@ func (form *FormBody) Save(model interface{}, db interface{}, parallel map[strin
 }
 
 // SaveWithValid 更新并且校验提交参数
-func (form *FormBody) SaveWithValid(model interface{}, db interface{}, parallel map[string]string, valid func(model interface{}) error) (interface{}, error) {
+func (form *FormBody) SaveWithValid(model interface{}, db interface{}, params map[string]string, valid func(model interface{}) error) (interface{}, error) {
 
 	err := form.Unmarshal(model)
 	if err != nil {
@@ -230,7 +231,7 @@ func (form *FormBody) SaveWithValid(model interface{}, db interface{}, parallel 
 		return nil, err
 	}
 
-	exec := GetExecute("SAVE", form.DriverName(parallel), "")
+	exec := GetExecute("SAVE", form.DriverName(params), "")
 	if exec == nil {
 		return nil, errors.New("execution function for 'SAVE' not found")
 	}

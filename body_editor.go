@@ -1,6 +1,9 @@
 package gocrud
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 type EditorBody struct {
 	Conditions  []Condition `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
@@ -9,25 +12,25 @@ type EditorBody struct {
 	*CommonBody
 }
 
-func NewEditorBody(driver string, ctx interface{}) EditorBody {
+func NewEditorBody(driver string, ctx context.Context) EditorBody {
 	return EditorBody{
 		CommonBody: NewCommonBody(driver, ctx),
 		Conditions: make([]Condition, 0),
 	}
 }
 
-func (form *EditorBody) where(db interface{}, parallel map[string]string) interface{} {
-	parallel = form.LoadDriverName(parallel)
+func (form *EditorBody) where(db interface{}, params map[string]string) interface{} {
+	params = form.LoadDriverName(params)
 	for _, c := range form.Conditions {
-		db = c.Where(db, parallel)
+		db = c.Where(db, params)
 	}
 	return db
 }
 
-func (form *EditorBody) whereSafe(db interface{}, parallel map[string]string) interface{} {
-	parallel = form.LoadDriverName(parallel)
+func (form *EditorBody) whereSafe(db interface{}, params map[string]string) interface{} {
+	params = form.LoadDriverName(params)
 	for _, c := range form.Conditions {
-		db2, flag := c.WhereSafe(db, parallel)
+		db2, flag := c.WhereSafe(db, params)
 		db = db2
 		if flag == true {
 			form.safeCounter++
@@ -37,13 +40,13 @@ func (form *EditorBody) whereSafe(db interface{}, parallel map[string]string) in
 }
 
 // Query 条件查询
-func (form *EditorBody) Query(db interface{}, parallel map[string]string) interface{} {
-	return form.where(db, parallel)
+func (form *EditorBody) Query(db interface{}, params map[string]string) interface{} {
+	return form.where(db, params)
 }
 
 // QuerySafe 防止空条件更新
-func (form *EditorBody) QuerySafe(db interface{}, parallel map[string]string) (interface{}, error) {
-	db = form.whereSafe(db, parallel)
+func (form *EditorBody) QuerySafe(db interface{}, params map[string]string) (interface{}, error) {
+	db = form.whereSafe(db, params)
 	if form.safeCounter == 0 {
 		return db, errors.New("forbid no condition edit")
 	}
@@ -51,28 +54,28 @@ func (form *EditorBody) QuerySafe(db interface{}, parallel map[string]string) (i
 }
 
 // UpdateData the data for update
-func (form *EditorBody) UpdateData(parallel map[string]string) map[string]interface{} {
+func (form *EditorBody) UpdateData(params map[string]string) map[string]interface{} {
 	data := map[string]interface{}{}
 	for _, exec := range form.Editors {
-		k, v := exec.Param(parallel)
+		k, v := exec.Param(params)
 		data[k] = v
 	}
 	return data
 }
 
 // Updates update model object
-func (form *EditorBody) Updates(model interface{}, db interface{}, parallel map[string]string) error {
-	newDb, err := form.QuerySafe(db, parallel)
+func (form *EditorBody) Updates(model interface{}, db interface{}, params map[string]string) error {
+	newDb, err := form.QuerySafe(db, params)
 	if err != nil {
 		return err
 	}
 
-	exec := GetExecute("UPDATES", form.DriverName(parallel), "")
+	exec := GetExecute("UPDATES", form.DriverName(params), "")
 	if exec == nil {
 		return errors.New("execution function for 'UPDATES' not found")
 	}
 
-	data := form.UpdateData(parallel)
+	data := form.UpdateData(params)
 	if e := exec(newDb, "", model, data); e == nil {
 		return nil
 	} else {
