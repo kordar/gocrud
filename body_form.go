@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/kordar/gormext"
 )
 
 type FormBody struct {
-	Conditions  []Condition `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
-	Object      interface{} `json:"object,omitempty" form:"object,omitempty"`
-	safeCounter int         // 防止无条件更新
+	Conditions  []Condition    `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
+	Object      interface{}    `json:"object,omitempty" form:"object,omitempty"`
+	safeCounter gormext.StrInt // 防止无条件更新
 	*CommonBody
 }
 

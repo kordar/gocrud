@@ -3,12 +3,13 @@ package gocrud
 import (
 	"context"
 	"errors"
+	"github.com/kordar/gormext"
 )
 
 type RemoveBody struct {
 	Data        map[string]interface{} `json:"data,omitempty" form:"data,omitempty"`             // 数据
 	Conditions  []Condition            `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
-	safeCounter int                    // 防止无条件更新
+	safeCounter gormext.StrInt         // 防止无条件更新
 	*CommonBody
 }
 

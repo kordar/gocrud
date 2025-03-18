@@ -3,11 +3,12 @@ package gocrud
 import (
 	"context"
 	"errors"
+	"github.com/kordar/gormext"
 )
 
 type SearchBody struct {
-	Page       int                    `json:"page" form:"page"`
-	PageSize   int                    `json:"pageSize" form:"pageSize"`
+	Page       gormext.StrInt         `json:"page" form:"page"`
+	PageSize   gormext.StrInt         `json:"pageSize" form:"pageSize"`
 	Data       map[string]interface{} `json:"data,omitempty" form:"data,omitempty"`             // 数据
 	Conditions []Condition            `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
 	Sorts      []Sort                 `json:"sorts,omitempty" form:"sorts,omitempty"`           // 排序

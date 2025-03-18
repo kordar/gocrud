@@ -3,12 +3,13 @@ package gocrud
 import (
 	"context"
 	"errors"
+	"github.com/kordar/gormext"
 )
 
 type EditorBody struct {
-	Conditions  []Condition `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
-	Editors     []Editor    `json:"editor,omitempty" form:"editor,omitempty"`
-	safeCounter int         // 防止无条件更新
+	Conditions  []Condition    `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
+	Editors     []Editor       `json:"editor,omitempty" form:"editor,omitempty"`
+	safeCounter gormext.StrInt // 防止无条件更新
 	*CommonBody
 }
 
