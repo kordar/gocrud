@@ -7,9 +7,10 @@ import (
 )
 
 type EditorBody struct {
-	Conditions  []Condition    `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
-	Editors     []Editor       `json:"editor,omitempty" form:"editor,omitempty"`
-	safeCounter gormext.StrInt // 防止无条件更新
+	Conditions  []Condition            `json:"conditions,omitempty" form:"conditions,omitempty"` // 条件
+	Editors     []Editor               `json:"editor,omitempty" form:"editor,omitempty"`
+	Data        map[string]interface{} `json:"data,omitempty" form:"data,omitempty"` // 数据
+	safeCounter gormext.StrInt         // 防止无条件更新
 	*CommonBody
 }
 
