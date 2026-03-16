@@ -97,10 +97,10 @@ func (mgr *ResourceManager) DriverName(apiName string, ctx context.Context) stri
 	return mgr.container.GetResourceService(apiName).DriverName()
 }
 
-func (mgr *ResourceManager) GetResourceService(apiName string, ctx context.Context) ResourceService {
+func (mgr *ResourceManager) GetResourceService(apiName string, ctx context.Context) (ResourceService, error) {
 	if apiName == "" || mgr.container.GetResourceService(apiName) == nil {
 		message := MessageFn(ctx, "resource service not found")
-		panic(message)
+		return nil, errors.New(message)
 	}
-	return mgr.container.GetResourceService(apiName)
+	return mgr.container.GetResourceService(apiName), nil
 }
