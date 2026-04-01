@@ -2,8 +2,6 @@ github.com/bwmarrin/snowflake v0.3.0 h1:xm67bEhkKh6ij1790JB83OujPR5CzNe8QuQqAgIS
 github.com/bwmarrin/snowflake v0.3.0/go.mod h1:NdZxfVWX+oR6y2K0o6qAYv6gIOP9rjG0/E9WsDpxqwE=
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/kordar/gologger v0.0.8 h1:bpbxxOagkXp7TKREji61FrwVljf5X56yvedQsWNVe28=
-github.com/kordar/gologger v0.0.8/go.mod h1:hJF0BnPeo/QSJalJBF0eOG362WHez/Uc5SurSd5cdEo=
 github.com/kordar/gormext v0.0.3 h1:Eo3+ERGdDcHAoUm7wjKeUQqR4oYcnKVZaGB1uIdsksc=
 github.com/kordar/gormext v0.0.3/go.mod h1:h43L5LdbRSqo5jzEkJy2hDOzLLXIuJYOQJENfCXheNM=
 github.com/kordar/goutil v1.1.1 h1:ZIYaoXe3vmNB8uHQ8kHa4NEGFY1AHkGekx8dP1XmPYg=

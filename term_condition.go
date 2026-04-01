@@ -1,6 +1,6 @@
 package gocrud
 
-import "github.com/kordar/gologger"
+import "log/slog"
 
 type Condition struct {
 	Property    string      `json:"property" form:"property"`
@@ -36,7 +36,7 @@ func (c Condition) WhereSafe(db interface{}, params map[string]string) (interfac
 
 	exec := GetExecute(c.Type, params["driver"], "EQ")
 	if exec == nil {
-		logger.Warnf("[gocrud] execution function for '%s' not found", c.Type)
+		slog.Warn("execution function not found", slog.String("package", "gocrud"), slog.String("type", c.Type))
 		return db, false
 	}
 
@@ -67,7 +67,7 @@ func (c Condition) Where(db interface{}, params map[string]string) interface{} {
 
 	exec := GetExecute(c.Type, params["driver"], "EQ")
 	if exec == nil {
-		logger.Warnf("[gocrud] execution function for '%s' not found", c.Type)
+		slog.Warn("execution function not found", slog.String("package", "gocrud"), slog.String("type", c.Type))
 		return db
 	}
 

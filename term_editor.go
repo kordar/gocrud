@@ -2,7 +2,7 @@ package gocrud
 
 import (
 	"errors"
-	logger "github.com/kordar/gologger"
+	"log/slog"
 )
 
 type Editor struct {
@@ -33,7 +33,7 @@ func (c Editor) Update(db interface{}, params map[string]string) error {
 
 	exec := GetExecute(c.Type, params["driver"], "SETVAL")
 	if exec == nil {
-		logger.Warnf("[gocrud] execution function for '%s' not found", c.Type)
+		slog.Warn("execution function not found", slog.String("package", "gocrud"), slog.String("type", c.Type))
 		return errors.New("execution function for 'SETVAL' not found")
 	}
 
